@@ -1,4 +1,15 @@
+var distanceInput = $("#distance"),
+	hoursInput = $("#hours"),
+	minutesInput = $("#minutes"),
+	secondsInput = $("#seconds"),
+	calculateBtn = $("#calculate_btn"),
+	paceText = $("#pace");
 
+  $(".calculate").on("click", function() {
+	var miles = parseFloat(distanceInput.value),
+		hours = parseFloat(hoursInput.value),
+		minutes = parseFloat(minutesInput.value),
+		seconds = parseFloat(secondsInput.value);
 
 
 var pRunTime = (pHours * 60) + (pMinutes * 60) + (pSeconds); // past run time from user input
