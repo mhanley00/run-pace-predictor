@@ -31,9 +31,12 @@ $( document ).ready(function() {
 
 
       
-    });$("#calculate-button").on("click", 
+    });
+    // ----------------------GOOGLE MAPS API-------------------------------------//
+
+    $("#calculate-button").on("click", 
     function geocode(){
-      var location= "Arlington, VA" 
+      var location= $("#current-location").val(); 
       // Turn location into City and State.
       axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
         params:{
@@ -59,7 +62,6 @@ $( document ).ready(function() {
     
     });
 
-// ----------------------GOOGLE MAPS API-------------------------------------//
 // geocode();
 
 
