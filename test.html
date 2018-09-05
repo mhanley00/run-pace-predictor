@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Materialize CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+
+  <title>TEST TEST TEST</title>
+<!-- GOOGLE MAPS API KEY: AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs -->
+<!-- https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
+ -->
+</head>
+<body>
+  
+    <input placeholder="blank" id="predicted-time" type="text" class="validate">
+    <label for="predicted-time">Predicted Time for Today's Run</label>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+
+
+  <script>
+    geocode();
+    function geocode(){
+      var location= "Kathma, Nepal"; 
+      // Turn location into City and State.
+      axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
+        params:{
+          address: location,
+          key: "AIzaSyBZsXrosKvRGdreWJo2EPOxhvxor5LBaBQ",
+        }
+      })
+      .then(function(response){
+        console.log(response);
+
+      // var latResult= response.data.results[0].geometry.location.lat;
+      // console.log(latResult);
+
+      // var lngResult=response.data.results[0].geometry.location.lng;
+      // console.log(lngResult);
+
+
+      })
+      .catch(function(error){
+        console.log(error);
+      })
+    }
+//     var address= "1600+Amphitheatre+Parkway,+Mountain+View,+CA";
+//     var queryURL = "https://maps.googleapis.com/maps/api/geocode/json?address="+address+"&key=AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs";
+
+//  $.ajax({
+//       url: queryURL,
+//       method: "GET"
+//     }).then(function(data) {
+//       console.log(data);
+
+//       var latResult= data.results[0].geometry.location.lat;
+//       console.log(latResult);
+
+//       var lngResult=data.results[0].geometry.location.lng;
+//       console.log(lngResult);
+  
+
+
+      
+//     });
+
+  </script>
+
+</body>
+
+</html>
