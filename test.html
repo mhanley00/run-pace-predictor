@@ -25,31 +25,34 @@
 
 
   <script>
-    geocode();
-    function geocode(){
-      var location= "Kathma, Nepal"; 
-      // Turn location into City and State.
-      axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
-        params:{
-          address: location,
-          key: "AIzaSyBZsXrosKvRGdreWJo2EPOxhvxor5LBaBQ",
-        }
-      })
-      .then(function(response){
-        console.log(response);
+  var long= -77.0369;
+  var lat= 38.9072;
+  
+  var queryURL = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/91a177081e40dcac6289e7c200157364/"+lat+","+long;
 
-      // var latResult= response.data.results[0].geometry.location.lat;
-      // console.log(latResult);
+    $.ajax({
+      url: queryURL,
+      method: "GET"
+    }).then(function(response) {
+      console.log("darkskyAPI:")
+      console.log(response);
+      var currentTemp= response.currently.temperature;
+      var currentHum=response.currently.humidity;
+      var currentWs=response.currently.windSpeed;
+      // console.log(currentTemp);
+      // console.log(currentHum);
+      // console.log(currentWs);
 
-      // var lngResult=response.data.results[0].geometry.location.lng;
-      // console.log(lngResult);
+      // Appending weather info onto DOM
+      $("#today-temp").append("<div class= 'todayTemp'>"+currentTemp+"</div>");
+
+      $("#today-hum").append("<div class= 'todayHum'>"+currentHum+"</div>");
+
+      $("#today-ws").append("<div class= 'todayWs'>"+currentWs+"</div>");
 
 
-      })
-      .catch(function(error){
-        console.log(error);
-      })
-    }
+      
+    });
 //     var address= "1600+Amphitheatre+Parkway,+Mountain+View,+CA";
 //     var queryURL = "https://maps.googleapis.com/maps/api/geocode/json?address="+address+"&key=AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs";
 
