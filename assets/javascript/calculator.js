@@ -54,6 +54,7 @@ function paceCalc (distance, hours, minutes, seconds, globals) {
     totalTime += minutes*60;
     totalTime += seconds;
     globals = totalTime;
+    $("#race-pace").empty().append(globals);
     // return pAvgPaceG in seconds don't need to return, this adjusts the global varaible average pace
   }
   console.log(paceCalc(13.1,1,35,18));

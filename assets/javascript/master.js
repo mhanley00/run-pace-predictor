@@ -154,6 +154,14 @@ function paceCalc (distance, hours, minutes, seconds, globals) {
     totalTime += minutes*60;
     totalTime += seconds;
     globals = totalTime;
+    var cpPace = Math.floor(totalTime/distance);
+    var paceMins = Math.floor (cpPace/60);
+    var paceSecs = cpPace - (paceMins*60);
+    if (paceSecs < 10) {
+        paceSecs = '0'+ paceSecs;
+      }
+    pRenderedPace = paceMins + ":" + paceSecs;
+    $("#race-pace").empty().append(pRenderedPace);
     // return pAvgPaceG in seconds don't need to return, this adjusts the global varaible average pace
   }
   console.log(paceCalc(13.1,1,35,18));
