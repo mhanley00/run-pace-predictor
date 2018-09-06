@@ -5,14 +5,17 @@ $(document).ready(function () {
 
 
 // ----------------------GOOGLE MAPS API-------------------------------------//
+// var fullName= $("#full-name").val().toLowercase();
+// var gender= $("#select-gender").val().toLowercase();
 
-var pHoursG = $("#p-run-hours").val(); //past run hours from user input
+
+var pHoursG = $("#p-run-hours").val();
+console.log("test test test:"+ pHoursG)//past run hours from user input
 var pMinutesG = $("#p-run-mins").val(); //past run minutes from user input
 var pSecondsG = $("#p-run-secs").val();
 var pRunDistG = $("#p-run-dist").val(); // previous/past run distance from user input
-var pWindmphG = $("#p-wind-mph").val(); 
+var pWindmphG = $("#p-wind-mph").val();
 
-function locationInput(){
 $("#calculate-button").on("click",
 
   function geocode() {
@@ -46,7 +49,7 @@ $("#calculate-button").on("click",
       })
 
   })
-}
+
 
 
 //------------------------------Dark Sky API------------------------------------------
@@ -93,7 +96,7 @@ $.ajax({
 })
 }
 
-locationInput();
+// locationInput();
 // tempInput();
 // Calling Functions
 

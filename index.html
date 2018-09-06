@@ -69,31 +69,21 @@
         <input placeholder="Full Name" id="full-name" type="text" class="validate">
         <label for="full_name">Enter your Name</label>
       </div>
-      <div class="col s6 m6 l6">
-        <a class='dropdown-trigger btn' href='#' data-target='dropdown1'>
-          <i class="material-icons left">face</i>Select Gender</a>
-
-        <!-- Dropdown Structure -->
-        <ul id='dropdown1' class='dropdown-content'>
-          <li>
-            <a href="#!">Male</a>
-          </li>
-          <li class="divider" tabindex="-1"></li>
-          <li>
-            <a href="#!">Female</a>
-          </li>
-        </ul>
+      <div class=" input-field col s4 m4 l4">
+        <input placeholder="Type M/F" id="select-gender" type="text" class="validate" maxlength="1">
+        <label for="select-gender">Enter Gender</label>
       </div>
+
     </div>
 
-      <!-- Start Race-time Info -->
-      <div id="race-header">
-        <h5 class="flow-text">Enter Previous Race Info:</h5>
-      </div>
-      <div class="row">
+    <!-- Start Race-time Info -->
+    <div id="race-header">
+      <h5 class="flow-text">Enter Previous Race Info:</h5>
+    </div>
+    <div class="row">
 
       <div class="input-field col s4 m4 l4">
-        <input placeholder="00" id="p-run-hours" type="text" class="validate"maxlength="3">
+        <input placeholder="00" id="p-run-hours" type="text" class="validate" maxlength="3">
         <label for="p-run-hours">Hour(s)</label>
       </div>
       <div class="input-field col s4 m4 l4">
@@ -101,28 +91,28 @@
         <label for="p-run-mins">Minute(s)</label>
       </div>
       <div class="input-field col s4 m4 l4">
-        <input placeholder="00" id="p-run-secs" type="text" class="validate"maxlength="2">
+        <input placeholder="00" id="p-run-secs" type="text" class="validate" maxlength="2">
         <label for="p-run-secs">Second(s)</label>
       </div>
       <!-- End Race time info -->
       <div class="row">
-      <div class="input-field col s3 m3 l3">
-        <input placeholder="00 " id="p-run-dist" type="text" class="validate" maxlength="3">
-        <label for="p-run-dist"> Race Distance (Miles)</label>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="00 " id="p-run-dist" type="text" class="validate" maxlength="4">
+          <label for="p-run-dist"> Race Distance (Miles)</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="i.e. 63" id="p-dew" type="text" class="validate" maxlength="3">
+          <label for="p-dew">Race Dewpoint</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="i.e. " id="p-temp" type="text" class="validate" maxlength="3">
+          <label for="p-temp">Race Temperature (F)</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="00" id="p-wind-mph" type="text" class="validate" maxlength="3">
+          <label for="p-wind-mph"> Wind Speed (MPH)</label>
+        </div>
       </div>
-      <div class="input-field col s3 m3 l3">
-        <input placeholder="i.e. 63" id="p-dew" type="text" class="validate"maxlength="3">
-        <label for="p-dew">Race Dewpoint</label>
-      </div>
-      <div class="input-field col s3 m3 l3">
-        <input placeholder="i.e. " id="p-temp" type="text" class="validate"maxlength="3">
-        <label for="p-temp" >Race Temperature (F)</label>
-      </div>
-      <div class="input-field col s3 m3 l3">
-        <input placeholder="00" id="p-wind-mph" type="text" class="validate"maxlength="3">
-        <label for="p-wind-mph"> Wind Speed (MPH)</label>
-      </div>
-    </div>
 
     </div>
 
@@ -132,19 +122,25 @@
         <label for="current-location">Enter Your current Location</label>
       </div>
     </div>
-    <div class="btn pulse blue waves-effect waves-light" id="calculate-button">Calculate</div>
-  </div>
+    <div class= "row">
+    <div class="btn pulse blue waves-effect waves-light col s12 m3 l3" id="calculate-button">Calculate</div>
+<div class= "col s12 m3 l3"></div>
+      <a href= "index.html">
+    <div class="btn  blue waves-effect waves-light col s12 m2 l2" id="reset-button">Reset </div>
+  </a>
 
+  </div>
+</div>
   <!--Fields Below this will populate After User Input -->
   <div class="container" id="middle-container">
     <div class="row">
       <div class="col s12 m3 l3">
         <h4 class="flow-text">Today's Forecast</h4>
       </div>
-      <div class="forecast-header col s12 m3 l3" id = "today-temp">
+      <div class="forecast-header col s12 m3 l3" id="today-temp">
         <label>Temperature (F)</label>
       </div>
-      <div class="forecast-header col s12 m3 l3"id= "today-hum">
+      <div class="forecast-header col s12 m3 l3" id="today-hum">
         <label>Humidity</label>
       </div>
 
@@ -165,10 +161,10 @@
       <div class="col s12 m4 l4" id="predicted-time">
         <label>Predicted Run Time</label>
       </div>
-      <div class="col s12 m2 l2" id= "predicted-pace">
+      <div class="col s12 m2 l2" id="predicted-pace">
         <label>Today's Predicted Pace</label>
       </div>
-      <div class="col s12 m2 l2" id= "predicted-ag">
+      <div class="col s12 m2 l2" id="predicted-ag">
         <label>Predicted Age Grade</label>
       </div>
     </div>
@@ -194,8 +190,6 @@
     $('.dropdown-trigger').dropdown();
 
   </script>
-  <script type="text/javascript" src="./assets/javascript/rmlogic.js"></script>
-  <script type="text/javascript" src="./assets/javascript/agtables.js"></script>
-  <script type="text/javascript" src="./assets/javascript/calculator.js"></script>
+  <script type="text/javascript" src="./assets/javascript/master.js"></script>
 
 </body>
