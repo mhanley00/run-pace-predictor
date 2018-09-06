@@ -9,48 +9,187 @@
   <!-- Materialize CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
 
-  <title>TEST TEST TEST</title>
-  <!-- GOOGLE MAPS API KEY: AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs -->
-  <!-- https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
- -->
+  <link rel="stylesheet" type="text/css" media="screen" href="./assets/CSS/rmmain.css" />
+  <title>Run Pace Calculator</title>
+
 </head>
 
 <body>
+  <div class="navbar-fixed">
+    <nav class="nav-wrapper blue">
+      <div class="container">
+        <a href="#" class="brand-logo">Find Your Pace</a>
+
+        <!-- Creating a toggle menu  -->
+        <!-- Data-target needs to equal the id of the links you want -->
+
+        <a href="#" class="sidenav-trigger" data-target="drop-link">
+          <i class="material-icons">menu</i>
+        </a>
+
+        <!-- Class right moves the UL to the right -->
+        <!-- class hide-on-med makes the list items toggle.  -->
+
+        <ul class="right hide-on-med-and-down">
+          <li>
+            <a href="index.html">Home</a>
+          </li>
+          <li>
+            <a href="">About</a>
+          </li>
+          <li>
+            <a href="">Contact</a>
+          </li>
+          <li>
+            <a href="" class="btn white blue-text">Login</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <ul class="sidenav" id="drop-link">
+    <li>
+      <a href="">Home</a>
+    </li>
+    <li>
+      <a href="">About</a>
+    </li>
+    <li>
+      <a href="">Contact</a>
+    </li>
+    <li>
+      <a href="">Login</a>
+    </li>
+  </ul>
+  <!-- Start Main Section -->
+  <div class="container" id="top-container">
+    <div class="row">
+      <div class=" input-field col s4 m4 l4">
+        <input placeholder="Full Name" id="full-name" type="text" class="validate">
+        <label for="full_name">Enter your Name</label>
+      </div>
+      <div class=" input-field col s4 m4 l4">
+        <input placeholder="Type M/F" id="select-gender" type="text" class="validate" maxlength="1">
+        <label for="select-gender">Enter Gender</label>
+      </div>
+
+    </div>
+
+    <!-- Start Race-time Info -->
+    <div id="race-header">
+      <h5 class="flow-text">Enter Previous Race Info:</h5>
+    </div>
+    <div class="row">
+
+      <div class="input-field col s4 m4 l4">
+        <input placeholder="00" id="p-run-hours" type="text" class="validate" maxlength="3">
+        <label for="p-run-hours">Hour(s)</label>
+      </div>
+      <div class="input-field col s4 m4 l4">
+        <input placeholder="00" id="p-run-mins" type="text" class="validate" maxlength="2">
+        <label for="p-run-mins">Minute(s)</label>
+      </div>
+      <div class="input-field col s4 m4 l4">
+        <input placeholder="00" id="p-run-secs" type="text" class="validate" maxlength="2">
+        <label for="p-run-secs">Second(s)</label>
+      </div>
+      <!-- End Race time info -->
+      <div class="row">
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="00 " id="p-run-dist" type="text" class="validate" maxlength="4">
+          <label for="p-run-dist"> Race Distance (Miles)</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="i.e. 63" id="p-dew" type="text" class="validate" maxlength="3">
+          <label for="p-dew">Race Dewpoint</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="i.e. " id="p-temp" type="text" class="validate" maxlength="3">
+          <label for="p-temp">Race Temperature (F)</label>
+        </div>
+        <div class="input-field col s3 m3 l3">
+          <input placeholder="00" id="p-wind-mph" type="text" class="validate" maxlength="3">
+          <label for="p-wind-mph"> Wind Speed (MPH)</label>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="input-field col s4 m4 l4">
+        <input placeholder="City,State" id="current-location" type="text" class="validate">
+        <label for="current-location">Enter Your current Location</label>
+      </div>
+    </div>
+    <div class= "row">
+    <div class="btn pulse blue waves-effect waves-light col s12 m3 l3" id="calculate-button">Calculate</div>
+<div class= "col s12 m3 l3"></div>
+      <a href= "index.html">
+    <div class="btn  blue waves-effect waves-light col s12 m2 l2" id="reset-button">Reset </div>
+  </a>
+
+  </div>
+</div>
+  <!--Fields Below this will populate After User Input -->
+  <div class="container" id="middle-container">
+    <div class="row">
+      <div class="col s12 m3 l3">
+        <h4 class="flow-text">Today's Forecast</h4>
+      </div>
+      <div class="forecast-header col s12 m3 l3" id="today-temp">
+        <label>Temperature (F)</label>
+      </div>
+      <div class="forecast-header col s12 m3 l3" id="today-hum">
+        <label>Humidity</label>
+      </div>
+
+      <div class="forecast-header col s12 m3 l3" id="today-ws">
+        <label>Wind Speed (KMPH)</label>
+      </div>
+
+    </div>
+
+
+    <div class="row">
+      <div class="col s12 m2 l2" id="race-pace">
+        <label>Your Race Pace</label>
+      </div>
+      <div class="col s12 m2 l2" id="race-ag">
+        <label>Your Age Grade</label>
+      </div>
+      <div class="col s12 m4 l4" id="predicted-time">
+        <label>Predicted Run Time</label>
+      </div>
+      <div class="col s12 m2 l2" id="predicted-pace">
+        <label>Today's Predicted Pace</label>
+      </div>
+      <div class="col s12 m2 l2" id="predicted-ag">
+        <label>Predicted Age Grade</label>
+      </div>
+    </div>
+  </div>
 
 
 
-  <div class="input-field col s12">
-    <select>
-      <option value="" disabled selected>Choose your option</option>
-      <option value="1">Option 1</option>
-      <option value="2">Option 2</option>
-      <option value="3">Option 3</option>
-    </select>
-    <label>Materialize Select</label>
-  </div> 
-  
-  
-  
+
+
+
+  <!-- Script CDNS -->
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
 
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
   <script>
 
-    document.addEventListener('DOMContentLoaded', function () {
-      var elems = document.querySelectorAll('select');
-      var instances = M.FormSelect.init(elems, options);
-    });
-
-    // Or with jQuery
-
+    // Need this for the side nav bar to be responsive.
+    // Put at the end of the html
     $(document).ready(function () {
-      $('select').formSelect();
+      $('.sidenav').sidenav();
     });
-
+    $('.dropdown-trigger').dropdown();
 
   </script>
+  <script type="text/javascript" src="./assets/javascript/calculator.js"></script>
 
 </body>
-
-</html>

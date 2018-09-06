@@ -1,846 +1,839 @@
 $(document).ready(function () {
 
-// Start API Script-----------------------------------
-
-
-
-// ----------------------GOOGLE MAPS API-------------------------------------//
-// var fullName= $("#full-name").val().toLowercase();
-// var gender= $("#select-gender").val().toLowercase();
-
-
-var pHoursG = $("#p-run-hours").val();
-console.log("test test test:"+ pHoursG)//past run hours from user input
-var pMinutesG = $("#p-run-mins").val(); //past run minutes from user input
-var pSecondsG = $("#p-run-secs").val();
-var pRunDistG = $("#p-run-dist").val(); // previous/past run distance from user input
-var pWindmphG = $("#p-wind-mph").val();
-
-$("#calculate-button").on("click",
-
-  function geocode() {
-    // Input of location from User
-    // If then Statement.  If Input of Current Location is empty, then run the following, if not Alert the user. Reset the Field first before proceeding.
-    var location = $("#current-location").val();
-    // Turn location into City and State.
-    axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
-      params: {
-        address: location,
-        key: "AIzaSyBZsXrosKvRGdreWJo2EPOxhvxor5LBaBQ"
-      }
+  // Start API Script-----------------------------------
+  
+  
+  
+  // ----------------------GOOGLE MAPS API-------------------------------------//
+  // var fullName= $("#full-name").val().toLowercase();
+  // var gender= $("#select-gender").val().toLowercase();
+  
+  
+  var pHoursG = $("#p-run-hours").val();
+  console.log("test test test:"+ pHoursG)//past run hours from user input
+  var pMinutesG = $("#p-run-mins").val(); //past run minutes from user input
+  var pSecondsG = $("#p-run-secs").val();
+  var pRunDistG = $("#p-run-dist").val(); // previous/past run distance from user input
+  var pWindmphG = $("#p-wind-mph").val();
+  
+  $("#calculate-button").on("click",
+  
+    function geocode() {
+      // Input of location from User
+      // If then Statement.  If Input of Current Location is empty, then run the following, if not Alert the user. Reset the Field first before proceeding.
+      var location = $("#current-location").val();
+      // Turn location into City and State.
+      axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
+        params: {
+          address: location,
+          key: "AIzaSyBZsXrosKvRGdreWJo2EPOxhvxor5LBaBQ"
+        }
+      })
+        .then(function (response) {
+          console.log("GoogleAPI:");
+          console.log(response);
+  
+          var latResult = response.data.results[0].geometry.location.lat;
+          console.log(latResult);
+          // latResult = lngLatArray[0];
+  
+  
+          var lngResult = response.data.results[0].geometry.location.lng;
+          console.log(lngResult);
+          // lngResult = lngLatArray[1];
+          tempInput(latResult, lngResult);
+  
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+  
     })
-      .then(function (response) {
-        console.log("GoogleAPI:");
-        console.log(response);
-
-        var latResult = response.data.results[0].geometry.location.lat;
-        console.log(latResult);
-        // latResult = lngLatArray[0];
-
-
-        var lngResult = response.data.results[0].geometry.location.lng;
-        console.log(lngResult);
-        // lngResult = lngLatArray[1];
-        tempInput(latResult, lngResult);
-
-      })
-      .catch(function (error) {
-        console.log(error);
-      })
-
-  })
-
-
-
-//------------------------------Dark Sky API------------------------------------------
-
-
-
-// var long = -77.0369;
-// var lat = 38.9072;
-
-function tempInput(lat, long){
   
-  console.log("long: " + long);
-  console.log("lat: " + lat);
-// var long= lngLatArray[1];
-// var lat= lngLatArray[0];
-// console.log("long/lattitude:")
-// console.log(lngLatArray);
-// var long= lngResult;
-// var lat= latResult;
-var queryURL = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/91a177081e40dcac6289e7c200157364/" + lat + "," + long;
-
-$.ajax({
-  url: queryURL,
-  method: "GET"
-}).then(function (response) {
-  console.log("darkskyAPI:")
-  console.log(response);
-  var currentTemp = response.currently.temperature;
-  var currentDew = response.currently.dewPoint;
-  var currentWs = response.currently.windSpeed;
-  // console.log(currentTemp);
-  // console.log(currentDew);
-  // console.log(currentWs);
-
-  // Appending weather info onto DOM
-  $("#today-temp").empty().append("<div class= 'todayTemp'>" + currentTemp + "</div>");
-
-  $("#today-hum").empty().append("<div class= 'todayHum'>" + currentDew + "</div>");
-
-  $("#today-ws").empty().append("<div class= 'todayWs'>" + currentWs + "</div>");
-
-
-
-})
-}
-
-// locationInput();
-// tempInput();
-// Calling Functions
-
-
-// Calculator JS Script---------------------------
-//   $(".calculate").on("click", function() {
-// 	var miles = parseFloat(distanceInput.value),
-// 		hours = parseFloat(hoursInput.value),
-// 		minutes = parseFloat(minutesInput.value),
-// 		seconds = parseFloat(secondsInput.value);
-//_________________________________________________________________
-//GLOBAL VARIABLES - EXPLANATION BELOW or RIGHT of VAR DECLARATION
-//---------———————————————————————————————————————————–––––––––––––
-// PREVIOUS RUN TIME, DISTANCE, WEATHER
- //past run secons from user input
-var pRunTimeG = (pHoursG * 60 * 60) + (pMinutesG * 60) + (pSecondsG); // past run time from user input
-var pAvgPaceG = []; //pAvgePaceG is initally in seconds, then turns into MM:SS in final function call as FinalAdjustedPaceG
-//these will be the values from the form input
-var pPacemphG = (60 / pAvgPaceG);
-var pWindSecOffsetG;
-var pPaceRangeG = []; //holds low and high estimates for added seconds per mile due to heat in array
-
-
-var pTempG = $("#p-temp").val();
-var pDewG = $("#p-dew").val();
-var pHeatSecOffsetG = [];
-
-var FinalAdjustedPaceG = []; // final adjusted paces in MM:SS-MM:SS
-
-//BASE RUN PACE
-var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
-
-// CURRENT RUN TIME, DISTANCE, WEATHER
-
-
-var cWindmphG; //FROM API CALL
-var cPacemphG; (60 / basePaceG);
-var cWindSecOffsetG;
-
-var cTempG; //FROM API CALL
-var cDewG;
-
-
-//_________________________________________________________________
-//BASIC PACE CALCULATOR
-//---------———————————————————————————————————————————–––––––––––––
-
-function paceCalc (distance, hours, minutes, seconds, globals) {
-  var distance = parseFloat(distance); //this will come from global variable from form, not (distance)
-  var hours = parseFloat(hours); //this will come from global variable from form, not (distance)
-  var minutes = parseFloat(minutes);//this will come from global variable from form, not (distance)
-  var seconds = parseFloat(seconds);//this will come from global variable from form, not (distance)
-  var totalTime = 0;
-    totalTime += hours*3600;
-    totalTime += minutes*60;
-    totalTime += seconds;
-    globals = totalTime;
-    var cpPace = Math.floor(totalTime/distance);
-    var paceMins = Math.floor (cpPace/60);
-    var paceSecs = cpPace - (paceMins*60);
-    if (paceSecs < 10) {
-        paceSecs = '0'+ paceSecs;
-      }
-    pRenderedPace = paceMins + ":" + paceSecs;
-    $("#race-pace").empty().append(pRenderedPace);
-    // return pAvgPaceG in seconds don't need to return, this adjusts the global varaible average pace
-  }
-  console.log(paceCalc(13.1,1,35,18));
-  paceCalc(26.2,3,29,09); //variables with user input will go in here
-
-//_________________________________________________________________
-//WIND MPH TIME OFFSET - IN SECONDS PER MILE
-//---------———————————————————————————————————————————–––––––––––––
-function windOffset(windMPH, paceMPH, globals){
-    //winOffset will return the wind's impact on runner's time seconds per mile.
-    //Next we'll add this to the heat/temp offset
-  var windDivPace = windMPH/paceMPH; //step-by-step so Math.pow doesn't freak out
-  globals = (12*(Math.pow(windDivPace ,2)));
-  // return windSecOffset; DO NOT NEED, THIS IS GLOBAL
-  }
-//_________________________________________________________________
-//HEAT TIME OFFSET - IN SECONDS PER MILE
-//---------———————————————————————————————————————————–––––––––––––
-// 100 or less:   no pace adjustment
-// 101 to 110:   0% to 0.5% pace adjustment
-// 111 to 120:   0.5% to 1.0% pace adjustment
-// 121 to 130:   1.0% to 2.0% pace adjustment
-// 131 to 140:   2.0% to 3.0% pace adjustment
-// 141 to 150:   3.0% to 4.5% pace adjustment
-// 151 to 160:   4.5% to 6.0% pace adjustment
-// 161 to 170:   6.0% to 8.0% pace adjustment
-// 171 to 180:   8.0% to 10.0% pace adjustment
-// Above 180:   hard running not recommended
-//For version that calculates the new pace, see repl: https://repl.it/@mhanley00/Run-Pace-Head-Adj
-function heatEffect(temperature, dewPoint, basePace, globals){
-var temperature;
-var dewPoint;
-var basePace;
-  var heatScore = temperature + dewPoint;
-  if (heatScore <= 100) {
-    var lowHeatEst = 0;
-    var highHeatEst = 0;
-  } 
-  else if (heatScore >=101 && heatScore <=110){
-    var lowHeatEst = 0;
-    var highHeatEst = basePace*.005;
-  }
-  else if (heatScore >=111 && heatScore <=120){
-    var lowHeatEst = basePace*.005;
-    var highHeatEst = basePace*.01;
-  }
-  else if (heatScore >=121 && heatScore <=130){
-    var lowHeatEst = basePace*.01;
-    var highHeatEst = basePace*.02;
-  }
-  else if (heatScore >=131 && heatScore <=140){
-    var lowHeatEst = basePace*.02;
-    var highHeatEst = basePace*.03;
-  }
-  else if (heatScore >=141 && heatScore <=150){
-    var lowHeatEst = basePace*.03;
-    var highHeatEst = basePace*.045;
-  }
-  else if (heatScore >=151 && heatScore <=160){
-    var lowHeatEst = basePace*.045;
-    var highHeatEst = basePace*.06;
-  }
-  else if (heatScore >=161 && heatScore <=170){
-    var lowHeatEst = basePace*.06;
-    var highHeatEst = basePace*.08;
-  }
-  else if (heatScore >=171 && heatScore <=180){
-    var lowHeatEst = basePace*.08;
-    var highHeatEst = basePace*.1;
-  }
-  else if (heatScore >=180){
-    return "Head to the pool!" //write to DOM
-  }
-  // return lowHeatEst + " – " + highHeatEst;
-  // return highHeatEst + " – " + lowHeatEst;
-  globals.push(lowHeatEst, highHeatEst);
-  // return paceRange;
-
-}
-console.log(heatEffect(20,100, 100));
-heatEffect(20,100, 1000);
-
-//_________________________________________________________________
-//GET BASE PACE
-//---------———————————————————————————————————————————–––––––––––––
-function getBasePace (pace, windOffset, heatOffset, globals){
-  var totalOffset = windOffsetSeconds + heatOffsetSeconds;
-  globals = pace - totalOffset;
-
-}
-
-//_________________________________________________________________
-//ADJUST BASE PACE VIA CURRENT TEMP, WIND
-//---------———————————————————————————————————————————–––––––––––––
-
-function adjustedPace (basePace, windOffsetSeconds, paceRange) {
-  var windAdjustedPace = basePace + windOffsetSeconds;
-  var cpPace = Math.floor(windAdjustedPace);
   
-  for (var i = 0; i< paceRange.length; i++) {
-    var paceMins = Math.floor (cpPace/60);
-    var paceSecs = cpPace - (paceMins*60);
-    if (paceSecs < 10) {
-        paceSecs = '0'+ paceSecs;
-      }
-    formattedPace = paceMins + ":" + paceSecs;
-  FinalAdjustedPaceG.push(windAdjustedPace + paceRange[i]);
   
-  }
-}
-
-//_________________________________________________________________
-//INITIALIZE VARIABLES (ie giant callback)
-//---------———————————————————————————————————————————–––––––––––––
- function initVars(){
-  //this will go at end; grab all variables from form, make global variables
-  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, pAvgPaceG); //  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, cPaceRangeG);
-  windOffset(pWindmphG, pPacemphG, pWindSecOffsetG);
-  heatEffect(pTempG, pDewG, pHeatSecOffsetG);
-}
-
-function initVars2() {
-  windOffset(cWindmphG, cPacemphG, cWindSecOffsetG);
-  heatEffect(cTempG, cDewG, cHeatSecOffsetG);
-}
-
-
-//jquery document ready
-initVars().then(
-  getBasePace (pAvgPaceG, pWindSecOffsetG, pHeatSecOffsetG, basePaceG)
-  .then(adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG))); //make sure these are all global
-//probably need separate global vars for past and current run times/weather
-
-
-
-
-
-//_________________________________________________________________
-//AG% CALCULATOR
-//---------———————————————————————————————————————————–––––––––––––
-var gender; // gender male/female from user input
-// var ages = new Array(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100);
-var pAGP; // AG% of past race time, calculated/ assinged to function AGCalc
-var gender;
-var womens = {
-  OC:{'5km': [3.1, 886]},
-  '50': {'5km':[3.1, 0.8937],	
-  '6km':[6, 0.8914]},
-  '60': {'5km':[5, 0.77], 
-  '6km' :[6, .777]}
-};
-//console.log("world record time: " + womens.OC['5km'][1]); //this now returns 886 🙌
-function AGCalc (gender, age, distance, ageRunTime, globals) {
-age = parseFloat(age), ageRunTime = parseFloat(ageRunTime);
-if (gender === 'm'){
-  var offset = mens[age][distance][1];
-  var AGadj = (mens['OC'][distance][1])/offset;
-  globals = AGadj/ageRunTime;
-}
-if (gender === 'f'){
-  var offset = womens[age][distance][1];
-  var AGadj = (womens['OC'][distance][1])/offset;
-  globals = AGadj/ageRunTime;
-}
-// return globals; 
-}
-console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
- AGCalc('f', 50, '5km', 2000);
-
-// End Calculator Script--------------------------------
-
-
-
-  //--------------------------------Calculate Button------------------------------------------
-
-
-// AG TABLES SCRIPT--------------------------------------
-// Male--------------------Male---------Male-------Male---//
-
-// 6km..not converted to miles
-var mens = {
-  OC: { '5km': [3.1, 779], '6km': [3.7, 942], '4Mile': [4.0, 1014], '8km': [5.0, 1272], '5Mile': [5.0, 1279], '10km': [6.2, 1603], '12km': [7.5, 1942], '15km': [9.3, 2455], '10Mile': [10.0, 2640], '20km': [12.4, 3315], 'H.Mar': [13.1, 3503], '25km': [15.5, 4205], '30km': [18.6, 5110], 'Marathon': [26.2, 7377], '50km': [31.1, 8970], '50Mile': [50.0, 16080], '100km': [62.1, 21360], '150km': [93.2, 36300], '100Mile': [100.0, 39850], '200km': [124.2, 52800] },
-
-  '5': { '5km': [3.1, 0.6062], '6km': [3.7, 0.6056], '4Mile': [4.0, 0.6056], '8km': [5.0, 0.6056], '5Mile': [5.0, 0.6056], '10km': [6.2, 0.6056], '12km': [7.5, 0.6056], '15km': [9.3, 0.6056], '10Mile': [10.0, 0.6056], '20km': [12.4, 0.6056], 'H.Mar': [13.1, 0.6056], '25km': [15.5, 0.6056], '30km': [18.6, 0.6056], 'Marathon': [26.2, 0.6056], '50km': [31.1, 0.6056], '50Mile': [50.0, 0.6056], '100km': [62.1, 0.6056], '150km': [93.2, 0.6056], '100Mile': [100.0, 0.6056], '200km': [124.2, 0.6056] },
-
-  '6': { '5km': [3.1,0.6602], '6km': [3.7,0.6596], '4Mile': [4.0,0.6596], '8km': [5.0,0.6596], '5Mile': [5.0,0.6596], '10km': [6.2,0.6596], '12km': [7.5,0.6596], '15km': [9.3,0.6596], '10Mile': [10.0,0.6596], '20km': [12.4,0.6596], 'H.Mar': [13.1,0.6596], '25km': [15.5,0.6596], '30km': [18.6,0.6596], 'Marathon': [26.2,0.6596], '50km': [31.1,0.6596], '50Mile': [50.0,0.6596], '100km': [62.1,0.6596], '150km': [93.2,0.6596], '100Mile': [100.0,0.6596], '200km': [124.2,0.6596] },
-
-  '7': { '5km': [3.1,0.7102], '6km': [3.7,0.7096], '4Mile': [4.0,0.7096], '8km': [5.0,0.7096], '5Mile': [5.0,0.7096], '10km': [6.2,0.7096], '12km': [7.5,0.7096], '15km': [9.3,0.7096], '10Mile': [10.0,0.7096], '20km': [12.4,0.7096], 'H.Mar': [13.1,0.7096], '25km': [15.5,0.7096], '30km': [18.6,0.7096], 'Marathon': [26.2,0.7096], '50km': [31.1,0.7096], '50Mile': [50.0,0.7096], '100km': [62.1,0.7096], '150km': [93.2,0.7096], '100Mile': [100.0,0.7096], '200km': [124.2,0.7096]},
-
-  '8': { '5km': [3.1,0.7562], '6km': [3.7,0.7556], '4Mile': [4.0,0.7556], '8km': [5.0,0.7556], '5Mile': [5.0,0.7556], '10km': [6.2,0.7556], '12km': [7.5,0.7556], '15km': [9.3,0.7556], '10Mile': [10.0,0.7556], '20km': [12.4,0.7556], 'H.Mar': [13.1,0.7556], '25km': [15.5,0.7556], '30km': [18.6,0.7556], 'Marathon': [26.2,0.7556], '50km': [31.1,0.7556], '50Mile': [50.0,0.7556], '100km': [62.1,0.7556], '150km': [93.2,0.7556], '100Mile': [100.0,0.7556], '200km': [124.2,0.7556] },
-
-  '9': { '5km': [3.1,0.7982], '6km': [3.7,0.7976], '4Mile': [4.0,0.7976], '8km': [5.0,0.7976], '5Mile': [5.0,0.7976], '10km': [6.2,0.7976], '12km': [7.5,0.7976], '15km': [9.3,0.7976], '10Mile': [10.0,0.7976], '20km': [12.4,0.7976], 'H.Mar': [13.1,0.7976], '25km': [15.5,0.7976], '30km': [18.6,0.7976], 'Marathon': [26.2,0.7976], '50km': [31.1,0.7976], '50Mile': [50.0,0.7976], '100km': [62.1,0.7976], '150km': [93.2,0.7976], '100Mile': [100.0,0.7976], '200km': [124.2,0.7976] },
-
-  '10': { '5km': [3.1,0.8362], '6km': [3.7,0.8356], '4Mile': [4.0,0.8356], '8km': [5.0,0.8356], '5Mile': [5.0,0.8356], '10km': [6.2,0.8356], '12km': [7.5,0.8356], '15km': [9.3,0.8356], '10Mile': [10.0,0.8356], '20km': [12.4,0.8356], 'H.Mar': [13.1,0.8356], '25km': [15.5,0.8356], '30km': [18.6,0.8356], 'Marathon': [26.2,0.8356], '50km': [31.1,0.8356], '50Mile': [50.0,0.8356], '100km': [62.1,0.8356], '150km': [93.2,0.8356], '100Mile': [100.0,0.8356], '200km': [124.2,0.8356] },
-
-  '11': { '5km': [3.1,0.8702], '6km': [3.7,0.8696], '4Mile': [4.0,0.8696], '8km': [5.0,0.8696], '5Mile': [5.0,0.8696], '10km': [6.2,0.8696], '12km': [7.5,0.8696], '15km': [9.3,0.8696], '10Mile': [10.0,0.8696], '20km': [12.4,0.8696], 'H.Mar': [13.1,0.8696], '25km': [15.5,0.8696], '30km': [18.6,0.8696], 'Marathon': [26.2,0.8696], '50km': [31.1,0.8696], '50Mile': [50.0,0.8696], '100km': [62.1,0.8696], '150km': [93.2,0.8696], '100Mile': [100.0,0.8696], '200km': [124.2,0.8696] },
-
-  '12': { '5km': [3.1,0.9002], '6km': [3.7,0.8996], '4Mile': [4.0,0.8996], '8km': [5.0,0.8996], '5Mile': [5.0,0.8996], '10km': [6.2,0.8996], '12km': [7.5,0.8996], '15km': [9.3,0.8996], '10Mile': [10.0,0.8996], '20km': [12.4,0.8996], 'H.Mar': [13.1,0.8996], '25km': [15.5,0.8996], '30km': [18.6,0.8996], 'Marathon': [26.2,0.8996], '50km': [31.1,0.8996], '50Mile': [50.0,0.8996], '100km': [62.1,0.8996], '150km': [93.2,0.8996], '100Mile': [100.0,0.8996], '200km': [124.2,0.8996] },
-
-  '13': { '5km': [3.1,0.9262], '6km': [3.7,0.9256], '4Mile': [4.0,0.9256], '8km': [5.0,0.9256], '5Mile': [5.0,0.9256], '10km': [6.2,0.9256], '12km': [7.5,0.9256], '15km': [9.3,0.9256], '10Mile': [10.0,0.9256], '20km': [12.4,0.9256], 'H.Mar': [13.1,0.9256], '25km': [15.5,0.9256], '30km': [18.6,0.9256], 'Marathon': [26.2,0.9256], '50km': [31.1,0.9256], '50Mile': [50.0,0.9256], '100km': [62.1,0.9256], '150km': [93.2,0.9256], '100Mile': [100.0,0.9256], '200km': [124.2,0.9256] },
-
-  '14': { '5km': [3.1,0.9482], '6km': [3.7,0.9476], '4Mile': [4.0,0.9476], '8km': [5.0,0.9476], '5Mile': [5.0,0.9476], '10km': [6.2,0.9476], '12km': [7.5,0.9476], '15km': [9.3,0.9476], '10Mile': [10.0,0.9476], '20km': [12.4,0.9476], 'H.Mar': [13.1,0.9476], '25km': [15.5,0.9476], '30km': [18.6,0.9476], 'Marathon': [26.2,0.9476], '50km': [31.1,0.9476], '50Mile': [50.0,0.9476], '100km': [62.1,0.9476], '150km': [93.2,0.9476], '100Mile': [100.0,0.9476], '200km': [124.2,0.9476] },
+  //------------------------------Dark Sky API------------------------------------------
   
-
-  '15': { '5km': [3.1,0.9662], '6km': [3.7,0.9656], '4Mile': [4.0,0.9656], '8km': [5.0,0.9656,], '5Mile': [5.0,0.9656], '10km': [6.2,0.9656], '12km': [7.5,0.9656], '15km': [9.3,0.9656], '10Mile': [10.0,0.9656], '20km': [12.4,0.9656], 'H.Mar': [13.1,0.9656], '25km': [15.5,0.9656], '30km': [18.6,0.9656], 'Marathon': [26.2,0.9656], '50km': [31.1,0.9656], '50Mile': [50.0,0.9656], '100km': [62.1,0.9656], '150km': [93.2,0.9656], '100Mile': [100.0,0.9656], '200km': [124.2,0.9656]},
-
-  '16': { '5km': [3.1,0.9802], '6km': [3.7,0.9796], '4Mile': [4.0,0.9796], '8km': [5.0,0.9796], '5Mile': [5.0,0.9796], '10km': [6.2,0.9796], '12km': [7.5,0.9796], '15km': [9.3,0.9796], '10Mile': [10.0,0.9796], '20km': [12.4,0.9796], 'H.Mar': [13.1,0.9796], '25km': [15.5,0.9796], '30km': [18.6,0.9796], 'Marathon': [26.2,0.9796], '50km': [31.1,0.9796], '50Mile': [50.0,0.9796], '100km': [62.1,0.9796], '150km': [93.2,0.9796], '100Mile': [100.0,0.9796], '200km': [124.2,0.9796]},
-
-  '17': { '5km': [3.1,0.9922], '6km': [3.7,0.9916], '4Mile': [4.0,0.9916], '8km': [5.0,0.9916], '5Mile': [5.0,0.9916], '10km': [6.2,0.9916], '12km': [7.5,0.9916], '15km': [9.3,0.9916], '10Mile': [10.0,0.9916], '20km': [12.4,0.9916], 'H.Mar': [13.1,0.9916], '25km': [15.5,0.9916], '30km': [18.6,0.9916], 'Marathon': [26.2,0.9916], '50km': [31.1,0.9916], '50Mile': [50.0,0.9916], '100km': [62.1,0.9916], '150km': [93.2,0.9916], '100Mile': [100.0,0.9916], '200km': [124.2,0.9916]},
   
-
-  '18': { '5km': [3.1,0.9996], '6km': [3.7,0.9993], '4Mile': [4.0,0.9993], '8km': [5.0,0.9993], '5Mile': [5.0,0.9993], '10km': [6.2,0.9993], '12km': [7.5,0.9993], '15km': [9.3,0.9993], '10Mile': [10.0,0.9993], '20km': [12.4,0.9993], 'H.Mar': [13.1,0.9993], '25km': [15.5,0.9993], '30km': [18.6,0.9993], 'Marathon': [26.2,0.9993], '50km': [31.1,0.9993], '50Mile': [50.0,0.9993], '100km': [62.1,0.9993], '150km': [93.2,0.9993], '100Mile': [100.0,0.9993], '200km': [124.2,0.9993] },
-
-
-  '19': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
   
-
-  '20': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+  // var long = -77.0369;
+  // var lat = 38.9072;
   
-  '21': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+  function tempInput(lat, long){
     
-  '23': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    console.log("long: " + long);
+    console.log("lat: " + lat);
+  // var long= lngLatArray[1];
+  // var lat= lngLatArray[0];
+  // console.log("long/lattitude:")
+  // console.log(lngLatArray);
+  // var long= lngResult;
+  // var lat= latResult;
+  var queryURL = "https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/91a177081e40dcac6289e7c200157364/" + lat + "," + long;
   
-  '24': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+  $.ajax({
+    url: queryURL,
+    method: "GET"
+  }).then(function (response) {
+    console.log("darkskyAPI:")
+    console.log(response);
+    var currentTemp = response.currently.temperature;
+    var currentDew = response.currently.dewPoint;
+    var currentWs = response.currently.windSpeed;
+    // console.log(currentTemp);
+    // console.log(currentDew);
+    // console.log(currentWs);
   
-  '25': { '5km': [3.1,1],'6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    // Appending weather info onto DOM
+    $("#today-temp").empty().append("<div class= 'todayTemp'>" + currentTemp + "</div>");
+  
+    $("#today-hum").empty().append("<div class= 'todayHum'>" + currentDew + "</div>");
+  
+    $("#today-ws").empty().append("<div class= 'todayWs'>" + currentWs + "</div>");
   
   
-  '26': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+  
+  })
+  }
+  
+  // locationInput();
+  // tempInput();
+  // Calling Functions
   
   
-  '27': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+  // Calculator JS Script---------------------------
+  //   $(".calculate").on("click", function() {
+  // 	var miles = parseFloat(distanceInput.value),
+  // 		hours = parseFloat(hoursInput.value),
+  // 		minutes = parseFloat(minutesInput.value),
+  // 		seconds = parseFloat(secondsInput.value);
+  //_________________________________________________________________
+  //GLOBAL VARIABLES - EXPLANATION BELOW or RIGHT of VAR DECLARATION
+  //---------———————————————————————————————————————————–––––––––––––
+  // PREVIOUS RUN TIME, DISTANCE, WEATHER
+   //past run secons from user input
+  var pRunTimeG = (pHoursG * 60 * 60) + (pMinutesG * 60) + (pSecondsG); // past run time from user input
+  var pAvgPaceG = []; //pAvgePaceG is initally in seconds, then turns into MM:SS in final function call as FinalAdjustedPaceG
+  //these will be the values from the form input
+  var pPacemphG = (60 / pAvgPaceG);
+  var pWindSecOffsetG;
+  var pPaceRangeG = []; //holds low and high estimates for added seconds per mile due to heat in array
   
   
-  '28': { '5km': [3.1,0.9997], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+  var pTempG = $("#p-temp").val();
+  var pDewG = $("#p-dew").val();
+  var pHeatSecOffsetG = [];
   
-  '29': { '5km': [3.1,0.9987], '6km': [3.7,0.9995], '4Mile': [4.0,0.9997], '8km': [5.0,1], '5Mile': [5.0,], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
-
-  '30': { '5km': [3.1,0.997], '6km': [3.7,0.9983], '4Mile': [4.0,0.9987], '8km': [5.0,0.9996], '5Mile': [5.0,0.9996], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '1': [100.0,1], '200km': [124.2,1]},
-
-  '31': { '5km': [3.1,0.9947], '6km': [3.7,0.9965], '4Mile': [4.0,0.9971], '8km': [5.0,0.9986], '5Mile': [5.0,0.9986], '10km': [6.2,0.9996], '12km':[7.5,0.9998], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
-
-  '32': { '5km': [3.1,0.9918], '6km': [3.7,0.994], '4Mile': [4.0,0.9948], '8km': [5.0,0.9968], '5Mile': [5.0,0.9969], '10km': [6.2,0.9984], '12km':[7.5,0.9989], '15km': [9.3,0.9994], '10Mile': [10.0,0.9995], '20km': [12.4,0.9998], 'H.Mar': [13.1,0.9998], '25km': [15.5,0.9998], '30km': [18.6,0.9998], 'Marathon': [26.2,0.9998], '50km': [31.1,0.9998], '50Mile': [50.0,0.9998], '100km': [62.1,0.9998], '150km': [93.2,0.9998], '100Mile': [100.0,0.9998], '200km': [124.2,0.9998]},
-
-  '33': { '5km': [3.1,0.9882], '6km': [3.7,0.9908], '4Mile': [4.0,0.9918], '8km': [5.0,0.9944], '5Mile': [5.0,0.9944], '10km': [6.2,0.9966], '12km':[7.5,0.9973], '15km': [9.3,0.998], '10Mile': [10.0,0.9982], '20km': [12.4,0.9988], 'H.Mar': [13.1,0.9989], '25km': [15.5,0.9989], '30km': [18.6,0.9989], 'Marathon': [26.2,0.9989], '50km': [31.1,0.9989], '50Mile': [50.0,0.9989], '100km': [62.1,0.9989], '150km': [93.2,0.9989], '100Mile': [100.0,0.9989], '200km': [124.2,0.9989] },
-
-  '34': { '5km': [3.1,0.9839], '6km': [3.7,0.987], '4Mile': [4.0,0.9881], '8km': [5.0,0.9913], '5Mile': [5.0,0.9913], '10km': [6.2,0.9941], '12km':[7.5,0.995], '15km': [9.3,0.996], '10Mile': [10.0,0.9963], '20km': [12.4,0.9972], 'H.Mar': [13.1,0.9973], '25km': [15.5,0.9973], '30km': [18.6,0.9973], 'Marathon': [26.2,0.9973], '50km': [31.1,0.9973], '50Mile': [50.0,0.9973], '100km': [62.1,0.9973], '150km': [93.2,0.9973], '100Mile': [100.0,0.9973], '200km': [124.2,0.9973] },
+  var FinalAdjustedPaceG = []; // final adjusted paces in MM:SS-MM:SS
   
-
-  '35': { '5km': [3.1,0.979], '6km': [3.7,0.9824], '4Mile': [4.0,0.9837], '8km': [5.0,0.9874], '5Mile': [5.0,0.9875], '10km': [6.2,0.9908], '12km':[7.5,0.992], '15km': [9.3,0.9932], '10Mile': [10.0,0.9936], '20km': [12.4,0.9948], 'H.Mar': [13.1,0.995], '25km': [15.5,0.995], '30km': [18.6,0.995], 'Marathon': [26.2,0.995], '50km': [31.1,0.995], '50Mile': [50.0,0.995], '100km': [62.1,0.995], '150km': [93.2,0.995], '100Mile': [100.0,0.995], '200km': [124.2,0.995] },
-
-  '36': { '5km': [3.1,0.9734], '6km': [3.7,0.9773], '4Mile': [4.0,0.9787], '8km': [5.0,0.9829], '5Mile': [5.0,0.983], '10km': [6.2,0.9869], '12km':[7.5,0.9882], '15km': [9.3,0.9898], '10Mile': [10.0,0.9902], '20km': [12.4,0.9916], 'H.Mar': [13.1,0.992], '25km': [15.5,0.992], '30km': [18.6,0.992], 'Marathon': [26.2,0.992], '50km': [31.1,0.992], '50Mile': [50.0,0.992], '100km': [62.1,0.992], '150km': [93.2,0.992], '100Mile': [100.0,0.992], '200km': [124.2,0.992] },
-
-  '37': { '5km': [3.1,0.9672], '6km': [3.7,0.9714], '4Mile': [4.0,0.973], '8km': [5.0,0.9777], '5Mile': [5.0,0.9778], '10km': [6.2,0.9822], '12km':[7.5,0.9838], '15km': [9.3,0.9856], '10Mile': [10.0,0.9861], '20km': [12.4,0.9878], 'H.Mar': [13.1,0.9882], '25km': [15.5,0.9882], '30km': [18.6,0.9882], 'Marathon': [26.2,0.9882], '50km': [31.1,0.9882], '50Mile': [50.0,0.9882], '100km': [62.1,0.9882], '150km': [93.2,0.9882], '100Mile': [100.0,0.9882], '200km': [124.2,0.9882] },
+  //BASE RUN PACE
+  var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
   
-
-  '38': { '5km': [3.1,0.9605], '6km': [3.7,0.9649], '4Mile': [4.0,0.9666], '8km': [5.0,0.9719], '5Mile': [5.0,0.972], '10km': [6.2,0.9769], '12km':[7.5,0.9786], '15km': [9.3,0.9807], '10Mile': [10.0,0.9813], '20km': [12.4,0.9832], 'H.Mar': [13.1,0.9837], '25km': [15.5,0.9837], '30km': [18.6,0.9837], 'Marathon': [26.2,0.9837], '50km': [31.1,0.9837], '50Mile': [50.0,0.9837], '100km': [62.1,0.9837], '150km': [93.2,0.9837], '100Mile': [100.0,0.9837], '200km': [124.2,0.9837] },
-
-
-  '39': { '5km': [3.1,0.9538], '6km': [3.7,0.958], '4Mile': [4.0,0.9597], '8km': [5.0,0.9653], '5Mile': [5.0,0.9654], '10km': [6.2,0.9708], '12km':[7.5,0.9727], '15km': [9.3,0.975], '10Mile': [10.0,0.9758], '20km': [12.4,0.9779], 'H.Mar': [13.1,0.9784], '25km': [15.5,0.9784], '30km': [18.6,0.9784], 'Marathon': [26.2,0.9784], '50km': [31.1,0.9784], '50Mile': [50.0,0.9784], '100km': [62.1,0.9784], '150km': [93.2,0.9784], '100Mile': [100.0,0.9784], '200km': [124.2,0.9784] },
-
-  '40': { '5km': [3.1,0.9471], '6km': [3.7,0.9511], '4Mile': [4.0,0.9527], '8km': [5.0,0.9581], '5Mile': [5.0,0.9582], '10km': [6.2,0.964], '12km':[7.5,0.9662], '15km': [9.3,0.9687], '10Mile': [10.0,0.9695], '20km': [12.4,0.9719], 'H.Mar': [13.1,0.9725], '25km': [15.5,0.9725], '30km': [18.6,0.9725], 'Marathon': [26.2,0.9725], '50km': [31.1,0.9725], '50Mile': [50.0,0.9725], '100km': [62.1,0.9725], '150km': [93.2,0.9725], '100Mile': [100.0,0.9725], '200km': [124.2,0.9725] },
-
-  '41': { '5km': [3.1,0.9404], '6km': [3.7,0.9442], '4Mile': [4.0,0.9457], '8km': [5.0,0.9509], '5Mile': [5.0,0.951], '10km': [6.2,0.9556], '12km':[7.5,0.9589], '15km': [9.3,0.9616], '10Mile': [10.0,0.9625], '20km': [12.4,0.9651], 'H.Mar': [13.1,0.9658], '25km': [15.5,0.9658], '30km': [18.6,0.9658], 'Marathon': [26.2,0.9658], '50km': [31.1,0.9658], '50Mile': [50.0,0.9658], '100km': [62.1,0.9658], '150km': [93.2,0.9658], '100Mile': [100.0,0.9658], '200km': [124.2,0.9658] },
-
-  '42': { '5km': [3.1,0.9337], '6km': [3.7,0.9373], '4Mile': [4.0,0.9378], '8km': [5.0,0.9436], '5Mile': [5.0,0.9438], '10km': [6.2,0.9491], '12km':[7.5,0.9513], '15km': [9.3,0.954], '10Mile': [10.0,0.9549], '20km': [12.4,0.9577], 'H.Mar': [13.1,0.9584], '25km': [15.5,0.9584], '30km': [18.6,0.9584], 'Marathon': [26.2,0.9584], '50km': [31.1,0.9584], '50Mile': [50.0,0.9584], '100km': [62.1,0.9584], '150km': [93.2,0.9584], '100Mile': [100.0,0.9584], '200km': [124.2,0.9584] },
-
-  '43': { '5km': [3.1,0.927], '6km': [3.7,0.9304], '4Mile': [4.0,0.9318], '8km': [5.0,0.9364], '5Mile': [5.0,0.9365], '10km': [6.2,0.9417], '12km':[7.5,0.9438], '15km': [9.3,0.9464], '10Mile': [10.0,0.9472], '20km': [12.4,0.9499], 'H.Mar': [13.1,0.9506], '25km': [15.5,0.9506], '30km': [18.6,0.9506], 'Marathon': [26.2,0.9506], '50km': [31.1,0.9506], '50Mile': [50.0,0.9506], '100km': [62.1,0.9506], '150km': [93.2,0.9506], '100Mile': [100.0,0.9506], '200km': [124.2,0.9506] },
-
-  '44': { '5km': [3.1,0.9203], '6km': [3.7,0.9235], '4Mile': [4.0,0.9248], '8km': [5.0,0.9292], '5Mile': [5.0,0.9293], '10km': [6.2,0.9342], '12km':[7.5,0.9362], '15km': [9.3,0.9387], '10Mile': [10.0,0.9396], '20km': [12.4,0.9422], 'H.Mar': [13.1,0.9428], '25km': [15.5,0.9428], '30km': [18.6,0.9428], 'Marathon': [26.2,0.9428], '50km': [31.1,0.9428], '50Mile': [50.0,0.9428], '100km': [62.1,0.9428], '150km': [93.2,0.9428], '100Mile': [100.0,0.9428], '200km': [124.2,0.9428] },
+  // CURRENT RUN TIME, DISTANCE, WEATHER
   
-
-  '45': { '5km': [3.1,0.9136], '6km': [3.7,0.9166], '4Mile': [4.0,0.9178], '8km': [5.0,0.922], '5Mile': [5.0,0.9221], '10km': [6.2,0.9267], '12km':[7.5,0.9287], '15km': [9.3,0.9311], '10Mile': [10.0,0.9472], '20km': [12.4,0.9499], 'H.Mar': [13.1,0.9506], '25km': [15.5,0.9506], '30km': [18.6,0.9506], 'Marathon': [26.2,0.9506], '50km': [31.1,0.9506], '50Mile': [50.0,0.9506], '100km': [62.1,0.9506], '150km': [93.2,0.9506], '100Mile': [100.0,0.9506], '200km': [124.2,0.9506] },
-
-  '46': { '5km': [3.1,0.9069], '6km': [3.7,0.9096], '4Mile': [4.0,0.9108], '8km': [5.0,0.9147], '5Mile': [5.0,0.9148], '10km': [6.2,0.9192], '12km':[7.5,0.9211], '15km': [9.3,0.9235], '10Mile': [10.0,0.9242], '20km': [12.4,0.9266], 'H.Mar': [13.1,0.9273], '25km': [15.5,0.9273], '30km': [18.6,0.9273], 'Marathon': [26.2,0.9273], '50km': [31.1,0.9273], '50Mile': [50.0,0.9273], '100km': [62.1,0.9273], '150km': [93.2,0.9273], '100Mile': [100.0,0.9273], '200km': [124.2,0.9273] },
-
-  '47': { '5km': [3.1,0.9002], '6km': [3.7,0.9027], '4Mile': [4.0,0.9038], '8km': [5.0,0.9075], '5Mile': [5.0,0.9076], '10km': [6.2,0.9117], '12km':[7.5,0.9136], '15km': [9.3,0.9158], '10Mile': [10.0,], '20km': [12.4,], 'H.Mar': [13.1,], '25km': [15.5,], '30km': [18.6,], 'Marathon': [26.2,], '50km': [31.1,], '50Mile': [50.0,], '100km': [62.1,], '150km': [93.2,], '100Mile': [100.0,], '200km': [124.2,]},
   
-
-  '48': { '5km': [3.1,0.8935], '6km': [3.7,0.9858], '4Mile': [4.0,0.8968], '8km': [5.0,0.9003], '5Mile': [5.0,0.9004], '10km': [6.2,0.9043], '12km':[7.5,0.906], '15km': [9.3,0.9082], '10Mile': [10.0,0.9166], '20km': [12.4,0.9189], 'H.Mar': [13.1,0.9195], '25km': [15.5,0.9195], '30km': [18.6,0.9195], 'Marathon': [26.2,0.9195], '50km': [31.1,0.9195], '50Mile': [50.0,0.9195], '100km': [62.1,0.9195], '150km': [93.2,0.9195], '100Mile': [100.0,0.9195], '200km': [124.2,0.9195] },
-
-
-  '49': { '5km': [3.1,0.8868], '6km': [3.7,0.8889], '4Mile': [4.0,0.8899], '8km': [5.0,0.893], '5Mile': [5.0,0.8931], '10km': [6.2,0.8968], '12km':[7.5,0.8984], '15km': [9.3,0.9005], '10Mile': [10.0,0.9012], '20km': [12.4,0.9034], 'H.Mar': [13.1,0.9039], '25km': [15.5,0.9039], '30km': [18.6,0.9039], 'Marathon': [26.2,0.9039], '50km': [31.1,0.9039], '50Mile': [50.0,0.9039], '100km': [62.1,0.9039], '150km': [93.2,0.9039], '100Mile': [100.0,0.9039], '200km': [124.2,0.9039] },
-
-  '50':{ '5km':[3.1, 0.8801],'6km':[3.7, 0.882],'4Mile':[4.0,0.8829 ],'8km':[5.0,0.8858 ],'5Mile':[5.0,0.8859  ],'10km':[6.2,0.8893 ],'12km':[7.5,0.8909 ],'15km':[9.3,0.8929],'10Mile':[10.0,0.8935 ],'20km':[12.4,0.8956 ],'H.Mar':[13.1,0.8961 ],'25km':[15.5,0.8961 ],'30km':[18.6,0.8961 ],'Marathon':[26.2,0.8961 ],'50km':[31.1,0.8961 ],'50Mile':[50.0,0.8961 ], '100km':[62.1,0.8961 ],'150km':[93.2,0.8961 ],'100Mile':[100.0,0.8961  ],'200km':[124.2,0.8961 ]},
-
-  '51':{ '5km':[3.1,0.8734 ],'6km':[3.7,0.8751 ],'4Mile':[4.0,0.8759 ],'8km':[5.0,0.8786 ],'5Mile':[5.0,0.8787  ],'10km':[6.2,0.8818 ],'12km':[7.5,0.8833 ],'15km':[9.3,0.8852],'10Mile':[10.0,0.8859 ],'20km':[12.4,0.8878 ],'H.Mar':[13.1,0.8884 ],'25km':[15.5,0.8884 ],'30km':[18.6,0.8884 ],'Marathon':[26.2,0.8884 ],'50km':[31.1,0.8884 ],'50Mile':[50.0,0.8884 ], '100km':[62.1,0.8884 ],'150km':[93.2,0.8884 ],'100Mile':[100.0,0.8884  ],'200km':[124.2,0.8884 ]},
-
-  '52':{ '5km':[3.1, 0.8667],'6km':[3.7,0.8682 ],'4Mile':[4.0,0.8689 ],'8km':[5.0,0.8714 ],'5Mile':[5.0,0.8714  ],'10km':[6.2,0.8743 ],'12km':[7.5,0.8758 ],'15km':[9.3,0.8776],'10Mile':[10.0,0.8782],'20km':[12.4,0.8801 ],'H.Mar':[13.1,0.8806 ],'25km':[15.5,0.8806 ],'30km':[18.6,0.8806 ],'Marathon':[26.2,0.8806 ],'50km':[31.1,0.8806 ],'50Mile':[50.0,0.8806 ], '100km':[62.1,0.8806 ],'150km':[93.2,0.8806 ],'100Mile':[100.0,0.8806  ],'200km':[124.2,0.8806 ] },
-
-  '53':{ '5km':[3.1,0.86 ],'6km':[3.7,0.8613 ],'4Mile':[4.0,0.8619 ],'8km':[5.0,0.8641 ],'5Mile':[5.0,0.8642  ],'10km':[6.2,0.8669 ],'12km':[7.5,0.8682 ],'15km':[9.3,0.87],'10Mile':[10.0,0.8705 ],'20km':[12.4,0.8646 ],'H.Mar':[13.1,0.8646 ],'25km':[15.5,0.8646 ],'30km':[18.6,0.8646 ],'Marathon':[26.2,0.8646],'50km':[31.1,0.8646],'50Mile':[50.0,0.8646 ], '100km':[62.1,0.8646 ],'150km':[93.2, 0.8646],'100Mile':[100.0, 0.8646 ],'200km':[124.2, 0.8646]},
-
-  '54':{ '5km':[3.1,0.8533],'6km':[3.7,0.8544 ],'4Mile':[4.0,0.8549 ],'8km':[5.0,0.8569 ],'5Mile':[5.0,0.8569  ],'10km':[6.2,0.8594 ],'12km':[7.5,0.8607 ],'15km':[9.3,0.8623],'10Mile':[10.0,0.8629 ],'20km':[12.4, 0.8646],'H.Mar':[13.1,0.865 ],'25km':[15.5,0.865 ],'30km':[18.6, 0.865],'Marathon':[26.2,0.865 ],'50km':[31.1, 0.865],'50Mile':[50.0, 0.865], '100km':[62.1,0.865 ],'150km':[93.2,0.865 ],'100Mile':[100.0, 0.865 ],'200km':[124.2,0.865 ]},
+  var cWindmphG; //FROM API CALL
+  var cPacemphG; (60 / basePaceG);
+  var cWindSecOffsetG;
   
-
-  '55':{ '5km':[3.1,0.8466 ],'6km':[3.7,0.8475 ],'4Mile':[4.0,0.8479 ],'8km':[5.0,0.8497 ],'5Mile':[5.0,0.8497 ],'10km':[6.2,0.8519 ],'12km':[7.5,0.8531 ],'15km':[9.3,0.8547],'10Mile':[10.0,0.8552 ],'20km':[12.4,0.8568 ],'H.Mar':[13.1,0.8568],'25km':[15.5, 0.8568],'30km':[18.6,0.8568],'Marathon':[26.2, 0.8568],'50km':[31.1,0.8568 ],'50Mile':[50.0,0.8568 ], '100km':[62.1,0.8568 ],'150km':[93.2,0.8568 ],'100Mile':[100.0,0.8568  ],'200km':[124.2,0.8568 ]},
-
-  '56':{ '5km':[3.1,0.8399 ],'6km':[3.7,0.8406 ],'4Mile':[4.0,0.841 ],'8km':[5.0,0.8424 ],'5Mile':[5.0, 0.8425 ],'10km':[6.2,0.8444 ],'12km':[7.5,0.8456 ],'15km':[9.3,0.847],'10Mile':[10.0,0.8475 ],'20km':[12.4,0.849 ],'H.Mar':[13.1, 0.8495],'25km':[15.5, 0.8495],'30km':[18.6, 0.8495],'Marathon':[26.2, 0.8495],'50km':[31.1,0.8495 ],'50Mile':[50.0,0.8495 ], '100km':[62.1, 0.8495],'150km':[93.2,0.8495 ],'100Mile':[100.0,0.8495  ],'200km':[124.2, 0.8495]},
-
-  '57':{ '5km':[3.1,0.8332 ],'6km':[3.7,0.8337 ],'4Mile':[4.0,0.834 ],'8km':[5.0,0.8352 ],'5Mile':[5.0,0.8352  ],'10km':[6.2,0.8369 ],'12km':[7.5,0.838 ],'15km':[9.3,0.8394],'10Mile':[10.0,0.8399 ],'20km':[12.4,0.8495 ],'H.Mar':[13.1, 0.8417],'25km':[15.5, 0.8417],'30km':[18.6,0.8417 ],'Marathon':[26.2, 0.8417],'50km':[31.1,0.8417 ],'50Mile':[50.0,0.8417 ], '100km':[62.1, 0.8417],'150km':[93.2,0.8417],'100Mile':[100.0, 0.8417 ],'200km':[124.2, 0.8417]},
+  var cTempG; //FROM API CALL
+  var cDewG;
   
-
-  '58':{ '5km':[3.1,0.8265 ],'6km':[3.7,0.8268 ],'4Mile':[4.0,0.827 ],'8km':[5.0,0.828 ],'5Mile':[5.0,0.828  ],'10km':[6.2,0.8295 ],'12km':[7.5,0.8305 ],'15km':[9.3,0.8317],'10Mile':[10.0,0.8322 ],'20km':[12.4, 0.8335],'H.Mar':[13.1,0.8339 ],'25km':[15.5, 0.8339],'30km':[18.6, 0.8339],'Marathon':[26.2, ],'50km':[31.1,0.8339 ],'50Mile':[50.0,0.8339 ], '100km':[62.1, 0.8339],'150km':[93.2, 0.8339],'100Mile':[100.0, 0.8339 ],'200km':[124.2,0.8339 ]},
-
-
-  '59':{ '5km':[3.1,0.8198 ],'6km':[3.7,0.8199 ],'4Mile':[4.0,0.82 ],'8km':[5.0,0.8208 ],'5Mile':[5.0,0.8208  ],'10km':[6.2,0.822 ],'12km':[7.5,0.8229 ],'15km':[9.3,0.8241],'10Mile':[10.0,0.8245 ],'20km':[12.4,0.8258 ],'H.Mar':[13.1, 0.8261],'25km':[15.5,0.8261 ],'30km':[18.6,0.8261 ],'Marathon':[26.2,0.8261 ],'50km':[31.1, 0.8261],'50Mile':[50.0,0.8261 ], '100km':[62.1,0.8261 ],'150km':[93.2,0.8261 ],'100Mile':[100.0,  0.8261],'200km':[124.2, 0.8261]},
-
-  '60':{ '5km':[3.1,0.8131],'6km':[3.7,0.813 ],'4Mile':[4.0,0.813 ],'8km':[5.0,0.8135 ],'5Mile':[5.0,0.8135  ],'10km':[6.2,0.8145 ],'12km':[7.5,0.8154 ],'15km':[9.3,0.8165],'10Mile':[10.0,0.8168 ],'20km':[12.4,0.818 ],'H.Mar':[13.1,0.8183 ],'25km':[15.5, 0.8183],'30km':[18.6, 0.8183],'Marathon':[26.2, 0.8183],'50km':[31.1, 0.8183],'50Mile':[50.0,0.8183 ], '100km':[62.1,0.8183 ],'150km':[93.2,0.8183 ],'100Mile':[100.0, 0.8183 ],'200km':[124.2, 0.8183]},
-
-  '61':{ '5km':[3.1,0.8064],'6km':[3.7,0.8061 ],'4Mile':[4.0,0.806 ],'8km':[5.0,0.8063 ],'5Mile':[5.0, 0.8063 ],'10km':[6.2,0.807 ],'12km':[7.5,0.8078 ],'15km':[9.3,0.8088],'10Mile':[10.0,0.8092 ],'20km':[12.4,0.8103 ],'H.Mar':[13.1, 0.8106],'25km':[15.5,0.8106 ],'30km':[18.6,0.8106 ],'Marathon':[26.2, 0.8106],'50km':[31.1,0.8106 ],'50Mile':[50.0, 0.8106], '100km':[62.1,0.8106],'150km':[93.2,0.8106],'100Mile':[100.0, 0.8106 ],'200km':[124.2, 0.8106]},
-
-  '62':{ '5km':[3.1,0.7997 ],'6km':[3.7,0.7992 ],'4Mile':[4.0,0.7991 ],'8km':[5.0,0.7991 ],'5Mile':[5.0,0.7991  ],'10km':[6.2,0.7995 ],'12km':[7.5,0.8003 ],'15km':[9.3,0.8012],'10Mile':[10.0,0.8015 ],'20km':[12.4, 0.8025],'H.Mar':[13.1,0.8028 ],'25km':[15.5,0.8028 ],'30km':[18.6, 0.8028],'Marathon':[26.2, 0.8028],'50km':[31.1, 0.8028],'50Mile':[50.0,0.8028 ], '100km':[62.1,0.8028 ],'150km':[93.2,0.8028 ],'100Mile':[100.0, 0.8028 ],'200km':[124.2, 0.8028]},
-
-  '63':{ '5km':[3.1,0.793 ],'6km':[3.7,0.7923 ],'4Mile':[4.0,0.7921 ],'8km':[5.0,0.7918 ],'5Mile':[5.0,0.7918  ],'10km':[6.2,0.7921 ],'12km':[7.5,0.7927 ],'15km':[9.3,0.7935],'10Mile':[10.0,0.7938 ],'20km':[12.4, ],'H.Mar':[13.1, ],'25km':[15.5, ],'30km':[18.6, ],'Marathon':[26.2, ],'50km':[31.1, ],'50Mile':[50.0, ], '100km':[62.1, ],'150km':[93.2, ],'100Mile':[100.0,  ],'200km':[124.2, ]},
-
-  '64':{ '5km':[3.1, 0.7863],'6km':[3.7,0.7854 ],'4Mile':[4.0,0.7851 ],'8km':[5.0,0.7846 ],'5Mile':[50, 0.7846,  ],'10km':[6.2,0.7846 ],'12km':[7.5,0.7852 ],'15km':[9.3,0.7859],'10Mile':[10.0,0.7862 ],'20km':[12.4,0.787 ],'H.Mar':[13.1, 0.7872],'25km':[15.5,0.7872 ],'30km':[18.6,0.7872 ],'Marathon':[26.2, 0.7872],'50km':[31.1, 0.7872],'50Mile':[50.0,0.7872], '100km':[62.1,0.7872],'150km':[93.2,0.7872],'100Mile':[100.0,0.7872  ],'200km':[124.2,0.7872 ]},
   
-
-  '65':{ '5km':[3.1,0.7796 ],'6km':[3.7,0.7785 ],'4Mile':[4.0,0.7781 ],'8km':[5.0,0.7774 ],'5Mile':[5.0,0.7774  ],'10km':[6.2,0.7771 ],'12km':[7.5,0.7776 ],'15km':[9.3,0.7782],'10Mile':[10.0,0.7785 ],'20km':[12.4,0.7792 ],'H.Mar':[13.1, 0.7794],'25km':[15.5, 0.7794],'30km':[18.6,0.7794 ],'Marathon':[26.2, ],'50km':[31.1, 0.7794],'50Mile':[50.0,0.7794 ], '100km':[62.1, 0.7794],'150km':[93.2, 0.7794],'100Mile':[100.0, 0.7794 ],'200km':[124.2,0.7794]},
-
-  '66':{ '5km':[3.1,0.7729 ],'6km':[3.7,0.7715 ],'4Mile':[4.0,0.7711 ],'8km':[5.0,0.7702 ],'5Mile':[5.0,0.7701  ],'10km':[6.2,0.7696 ],'12km':[7.5,0.77 ],'15km':[9.3,0.7706],'10Mile':[10.0,0.7708 ],'20km':[12.4,0.7715 ],'H.Mar':[13.1,0.7717 ],'25km':[15.5,0.7717 ],'30km':[18.6, 0.7717],'Marathon':[26.2, 0.7717],'50km':[31.1,0.7717 ],'50Mile':[50.0,0.7717 ], '100km':[62.1,0.7717 ],'150km':[93.2,0.7717 ],'100Mile':[100.0, 0.7717 ],'200km':[124.2,0.7717 ]},
-
-  '67':{ '5km':[3.1,0.7662 ],'6km':[3.7,0.7646 ],'4Mile':[4.0,0.7641 ],'8km':[5.0,0.7629 ],'5Mile':[5.0,0.7629  ],'10km':[6.2,0.7621 ],'12km':[7.5, 0.7625],'15km':[9.3,0.763],'10Mile':[10.0,0.7631 ],'20km':[12.4, 0.7637],'H.Mar':[13.1,0.7639 ],'25km':[15.5,0.7639 ],'30km':[18.6,0.7639 ],'Marathon':[26.2, 0.7639],'50km':[31.1,0.7639 ],'50Mile':[50.0,0.7639 ], '100km':[62.1,0.7639 ],'150km':[93.2,0.7639 ],'100Mile':[100.0,0.7639],'200km':[124.2,0.7639 ]},
+  //_________________________________________________________________
+  //BASIC PACE CALCULATOR
+  //---------———————————————————————————————————————————–––––––––––––
   
-
-  '68':{ '5km':[3.1,0.7592],'6km':[3.7, 0.7577],'4Mile':[4.0,0.7571 ],'8km':[5.0,0.7557 ],'5Mile':[5.0,0.7557  ],'10km':[6.2,0.7547 ],'12km':[7.5,0.7549 ],'15km':[9.3,0.7553],'10Mile':[10.0,0.7555 ],'20km':[12.4,0.7559 ],'H.Mar':[13.1, 0.7561],'25km':[15.5,0.7561 ],'30km':[18.6, 0.7561],'Marathon':[26.2, 0.7561],'50km':[31.1, 0.7561],'50Mile':[50.0,0.7561 ], '100km':[62.1, 0.7561],'150km':[93.2,0.7561 ],'100Mile':[100.0, 0.7561 ],'200km':[124.2,0.7561 ]},
-
-
-  '69':{ '5km':[3.1,0.7515],'6km':[3.7,0.7501 ],'4Mile':[4.0,0.7495 ],'8km':[5.0,0.7482 ],'5Mile':[5.0,0.7482  ],'10km':[6.2,0.7471 ],'12km':[7.5,0.7474 ],'15km':[9.3,0.7477],'10Mile':[10.0,0.7478 ],'20km':[12.4,0.7482 ],'H.Mar':[13.1, 0.7483],'25km':[15.5,0.7483],'30km':[18.6, 0.7483],'Marathon':[26.2, 0.7483],'50km':[31.1,0.7483 ],'50Mile':[50.0, 0.7483], '100km':[62.1,0.7483 ],'150km':[93.2,0.7483 ],'100Mile':[100.0, 0.7483 ],'200km':[124.2,0.7483 ]},
-
-  '70':{ '5km':[3.1,0.7433 ],'6km':[3.7,0.7419 ],'4Mile':[4.0,0.7412 ],'8km':[5.0,0.7401 ],'5Mile':[5.0,0.7401  ],'10km':[6.2,0.7391 ],'12km':[7.5,0.7395 ],'15km':[9.3,0.7399],'10Mile':[10.0,0.7401 ],'20km':[12.4, 0.7483],'H.Mar':[13.1,0.7405 ],'25km':[15.5,0.7405 ],'30km':[18.6,0.7405 ],'Marathon':[26.2, 0.7405],'50km':[31.1, 0.7405],'50Mile':[50.0, 0.7405], '100km':[62.1, 0.7405],'150km':[93.2,0.7405 ],'100Mile':[100.0, 0.7405 ],'200km':[124.2, 0.7405]},
-
-  '71':{ '5km':[3.1,0.7344 ],'6km':[3.7,0.7331 ],'4Mile':[4.0,0.7323 ],'8km':[5.0,0.7314 ],'5Mile':[5.0,0.7314  ],'10km':[6.2,0.7305 ],'12km':[7.5,0.731 ],'15km':[9.3,0.7315],'10Mile':[10.0,0.7317 ],'20km':[12.4,0.7322 ],'H.Mar':[13.1,0.7324 ],'25km':[15.5,0.7324 ],'30km':[18.6,0.7324 ],'Marathon':[26.2,0.7324],'50km':[31.1,0.7324],'50Mile':[50.0,0.7324], '100km':[62.1,0.7324 ],'150km':[93.2,0.7324 ],'100Mile':[100.0, 0.7324 ],'200km':[124.2, 0.7324]},
-
+  function paceCalc (distance, hours, minutes, seconds, globals) {
+    var distance = parseFloat(distance); //this will come from global variable from form, not (distance)
+    var hours = parseFloat(hours); //this will come from global variable from form, not (distance)
+    var minutes = parseFloat(minutes);//this will come from global variable from form, not (distance)
+    var seconds = parseFloat(seconds);//this will come from global variable from form, not (distance)
+    var totalTime = 0;
+      totalTime += hours*3600;
+      totalTime += minutes*60;
+      totalTime += seconds;
+      globals = totalTime;
+      // return pAvgPaceG in seconds don't need to return, this adjusts the global varaible average pace
+    }
+    console.log(paceCalc(13.1,1,35,18));
+    paceCalc(26.2,3,29,09); //variables with user input will go in here
   
-  '72':{ '5km':[3.1,0.7249 ],'6km':[3.7,0.7237 ],'4Mile':[4.0,0.7228 ],'8km':[5.0,0.722 ],'5Mile':[5.0,0.722  ],'10km':[6.2, 0.7211],'12km':[7.5, 0.7218],'15km':[9.3,0.7224],'10Mile':[10.0,0.7227 ],'20km':[12.4,0.7234 ],'H.Mar':[13.1,0.7236 ],'25km':[15.5, 0.7236],'30km':[18.6,0.7236 ],'Marathon':[26.2,0.7236 ],'50km':[31.1,0.7236 ],'50Mile':[50.0,0.7236 ], '100km':[62.1,0.7236 ],'150km':[93.2, 0.7236],'100Mile':[100.0, 0.7236 ],'200km':[124.2,0.7236 ]},
-
-  '73':{ '5km':[3.1,0.7147 ],'6km':[3.7,0.7136],'4Mile':[4.0,0.7126 ],'8km':[5.0,0.7119 ],'5Mile':[5.0, 0.7119 ],'10km':[6.2,0.7112],'12km':[7.5,0.7119 ],'15km':[9.3,0.7127],'10Mile':[10.0,0.713 ],'20km':[12.4, 0.7138],'H.Mar':[13.1,0.714 ],'25km':[15.5,0.714 ],'30km':[18.6, 0.714],'Marathon':[26.2,0.714 ],'50km':[31.1, 0.714],'50Mile':[50.0, 0.714], '100km':[62.1, 0.714],'150km':[93.2,0.714 ],'100Mile':[100.0, 0.714 ],'200km':[124.2, 0.714]},
-
-  '74':{ '5km':[3.1,0.704 ],'6km':[3.7,0.7028 ],'4Mile':[4.0,0.7018 ],'8km':[5.0, 0.7012],'5Mile':[5.0, 0.7012 ],'10km':[6.2,0.7005 ],'12km':[7.5,0.7013 ],'15km':[9.3,0.7022],'10Mile':[10.0, 0.7026],'20km':[12.4,0.7035 ],'H.Mar':[13.1, 0.7038],'25km':[15.5,0.7038 ],'30km':[18.6,0.7038 ],'Marathon':[26.2,0.7038 ],'50km':[31.1, 0.7038],'50Mile':[50.0,0.7038 ], '100km':[62.1,0.7038 ],'150km':[93.2, 0.7038],'100Mile':[100.0, 0.7038 ],'200km':[124.2, 0.7038]},
+  //_________________________________________________________________
+  //WIND MPH TIME OFFSET - IN SECONDS PER MILE
+  //---------———————————————————————————————————————————–––––––––––––
+  function windOffset(windMPH, paceMPH, globals){
+      //winOffset will return the wind's impact on runner's time seconds per mile.
+      //Next we'll add this to the heat/temp offset
+    var windDivPace = windMPH/paceMPH; //step-by-step so Math.pow doesn't freak out
+    globals = (12*(Math.pow(windDivPace ,2)));
+    // return windSecOffset; DO NOT NEED, THIS IS GLOBAL
+    }
+  //_________________________________________________________________
+  //HEAT TIME OFFSET - IN SECONDS PER MILE
+  //---------———————————————————————————————————————————–––––––––––––
+  // 100 or less:   no pace adjustment
+  // 101 to 110:   0% to 0.5% pace adjustment
+  // 111 to 120:   0.5% to 1.0% pace adjustment
+  // 121 to 130:   1.0% to 2.0% pace adjustment
+  // 131 to 140:   2.0% to 3.0% pace adjustment
+  // 141 to 150:   3.0% to 4.5% pace adjustment
+  // 151 to 160:   4.5% to 6.0% pace adjustment
+  // 161 to 170:   6.0% to 8.0% pace adjustment
+  // 171 to 180:   8.0% to 10.0% pace adjustment
+  // Above 180:   hard running not recommended
+  //For version that calculates the new pace, see repl: https://repl.it/@mhanley00/Run-Pace-Head-Adj
+  function heatEffect(temperature, dewPoint, basePace, globals){
+  var temperature;
+  var dewPoint;
+  var basePace;
+    var heatScore = temperature + dewPoint;
+    if (heatScore <= 100) {
+      var lowHeatEst = 0;
+      var highHeatEst = 0;
+    } 
+    else if (heatScore >=101 && heatScore <=110){
+      var lowHeatEst = 0;
+      var highHeatEst = basePace*.005;
+    }
+    else if (heatScore >=111 && heatScore <=120){
+      var lowHeatEst = basePace*.005;
+      var highHeatEst = basePace*.01;
+    }
+    else if (heatScore >=121 && heatScore <=130){
+      var lowHeatEst = basePace*.01;
+      var highHeatEst = basePace*.02;
+    }
+    else if (heatScore >=131 && heatScore <=140){
+      var lowHeatEst = basePace*.02;
+      var highHeatEst = basePace*.03;
+    }
+    else if (heatScore >=141 && heatScore <=150){
+      var lowHeatEst = basePace*.03;
+      var highHeatEst = basePace*.045;
+    }
+    else if (heatScore >=151 && heatScore <=160){
+      var lowHeatEst = basePace*.045;
+      var highHeatEst = basePace*.06;
+    }
+    else if (heatScore >=161 && heatScore <=170){
+      var lowHeatEst = basePace*.06;
+      var highHeatEst = basePace*.08;
+    }
+    else if (heatScore >=171 && heatScore <=180){
+      var lowHeatEst = basePace*.08;
+      var highHeatEst = basePace*.1;
+    }
+    else if (heatScore >=180){
+      return "Head to the pool!" //write to DOM
+    }
+    // return lowHeatEst + " – " + highHeatEst;
+    // return highHeatEst + " – " + lowHeatEst;
+    globals.push(lowHeatEst, highHeatEst);
+    // return paceRange;
   
-
-  '75':{ '5km':[3.1,0.6926 ],'6km':[3.7,0.6915 ],'4Mile':[4.0,0.6903 ],'8km':[5.0,0.6899 ],'5Mile':[5.0, 0.6899 ],'10km':[6.2,0.6892 ],'12km':[7.5,0.6901 ],'15km':[9.3,0.6911],'10Mile':[10.0,0.6915],'20km':[12.4,0.6926 ],'H.Mar':[13.1,0.6929 ],'25km':[15.5,0.6929 ],'30km':[18.6, 0.6929],'Marathon':[26.2, 0.6929],'50km':[31.1,0.6929 ],'50Mile':[50.0,0.6929 ], '100km':[62.1, 0.6929],'150km':[93.2,0.6929 ],'100Mile':[100.0,0.6929  ],'200km':[124.2,0.6929 ]},
-
-  '76':{ '5km':[3.1,0.6806 ],'6km':[3.7, 0.6795],'4Mile':[4.0, 0.6782],'8km':[5.0, 0.6779],'5Mile':[5.0, 0.6779 ],'10km':[6.2,0.6772 ],'12km':[7.5, 0.6782],'15km':[9.3,0.6793],'10Mile':[10.0,0.6797],'20km':[12.4,0.6809 ],'H.Mar':[13.1, ],'25km':[15.5, 0.6809],'30km':[18.6,0.6809 ],'Marathon':[26.2, 0.6809],'50km':[31.1, 0.6809],'50Mile':[50.0,0.6809 ], '100km':[62.1, 0.6809],'150km':[93.2, 0.6809],'100Mile':[100.0,  0.6809],'200km':[124.2, 0.6809]},
-
-  '77':{ '5km':[3.1,0.668 ],'6km':[3.7,0.6668 ],'4Mile':[4.0, 0.6655],'8km':[5.0,0.6653 ],'5Mile':[5.0,0.6653  ],'10km':[6.2,0.6646 ],'12km':[7.5,0.6656 ],'15km':[9.3,0.6668],'10Mile':[10.0,0.6673 ],'20km':[12.4, 0.6686],'H.Mar':[13.1,0.6689 ],'25km':[15.5,0.6689],'30km':[18.6,0.6689 ],'Marathon':[26.2, 0.6689],'50km':[31.1,0.6689 ],'50Mile':[50.0,0.6689], '100km':[62.1, 0.6689],'150km':[93.2,0.6689 ],'100Mile':[100.0, 0.6689 ],'200km':[124.2, 0.6689]},
+  }
+  console.log(heatEffect(20,100, 100));
+  heatEffect(20,100, 1000);
   
-
-  '78':{ '5km':[3.1,0.6547 ],'6km':[3.7, 0.6535],'4Mile':[4.0, 0.6521],'8km':[5.0,0.652 ],'5Mile':[5.0,0.652  ],'10km':[6.2,0.6513 ],'12km':[7.5,0.6524],'15km':[9.3,],'10Mile':[10.0, 0.6537],'20km':[12.4, 0.6555],'H.Mar':[13.1,0.6559 ],'25km':[15.5, 0.6559],'30km':[18.6, 0.6559],'Marathon':[26.2,0.6559 ],'50km':[31.1, 0.6559],'50Mile':[50.0,0.6559 ], '100km':[62.1, ],'150km':[93.2,0.6559],'100Mile':[100.0, 0.6559 ],'200km':[124.2,0.6559]},
-
-
-  '79':{ '5km':[3.1,0.6408 ],'6km':[3.7,0.6408 ],'4Mile':[4.0,0.6381 ],'8km':[5.0,0.638 ],'5Mile':[5.0, 0.638 ],'10km':[6.2,0.6374 ],'12km':[7.5,0.6385],'15km':[9.3,0.6398],'10Mile':[10.0,0.6403],'20km':[12.4,0.6418 ],'H.Mar':[13.1,0.6422],'25km':[15.5,0.6422 ],'30km':[18.6,0.6422 ],'Marathon':[26.2,0.6422 ],'50km':[31.1, 0.6422],'50Mile':[50.0,0.6422 ], '100km':[62.1,0.6422 ],'150km':[93.2,0.6422 ],'100Mile':[100.0, 0.6422 ],'200km':[124.2, 0.6422]},
-
-  '80':{ '5km':[3.1,0.6263 ],'6km':[3.7,0.625 ],'4Mile':[4.0,0.6235 ],'8km':[5.0,0.6235 ],'5Mile':[5.0,0.6235  ],'10km':[6.2,0.6228 ],'12km':[7.5, 0.6239],'15km':[9.3,0.6253],'10Mile':[10.0, 0.6258],'20km':[12.4,0.6273 ],'H.Mar':[13.1,0.6277 ],'25km':[15.5, 0.6277],'30km':[18.6, 0.6277],'Marathon':[26.2,0.6277 ],'50km':[31.1,0.6277 ],'50Mile':[50.0, 0.6277], '100km':[62.1,0.6277 ],'150km':[93.2, 0.6277],'100Mile':[100.0, 0.6277 ],'200km':[124.2, 0.6277]},
-
-  '81':{ '5km':[3.1,0.6112 ],'6km':[3.7,0.6098 ],'4Mile':[4.0, 0.6082],'8km':[5.0,0.6082 ],'5Mile':[5.0,0.6082  ],'10km':[6.2,0.6075 ],'12km':[7.5, 0.6087],'15km':[9.3,0.6101],'10Mile':[10.0,0.6106 ],'20km':[12.4,0.6122 ],'H.Mar':[13.1, 0.6126],'25km':[15.5, 0.6126],'30km':[18.6, 0.6126],'Marathon':[26.2,0.6126 ],'50km':[31.1, 0.6126],'50Mile':[50.0,0.6126 ], '100km':[62.1,0.6126 ],'150km':[93.2, 0.6126],'100Mile':[100.0,  0.6126],'200km':[124.2, 0.6126]},
-
-  '82':{ '5km':[3.1,0.5955 ],'6km':[3.7,0.594 ],'4Mile':[4.0,0.594 ],'8km':[5.0,0.5923 ],'5Mile':[5.0,0.5924  ],'10km':[6.2, 0.5916],'12km':[7.5,0.5928 ],'15km':[9.3,0.5942],'10Mile':[10.0,0.5947 ],'20km':[12.4, 0.5963],'H.Mar':[13.1,0.5968],'25km':[15.5,0.5968 ],'30km':[18.6, 0.5968],'Marathon':[26.2,0.5968 ],'50km':[31.1, 0.5968],'50Mile':[50.0, 0.5968], '100km':[62.1,0.5968 ],'150km':[93.2, 0.5968],'100Mile':[100.0, 0.5968 ],'200km':[124.2, 0.5968]},
-
-  '83':{ '5km':[3.1,0.5791 ],'6km':[3.7, 0.5775],'4Mile':[4.0,0.5758],'8km':[5.0, 0.5758],'5Mile':[5.0,0.5758  ],'10km':[6.2,0.575 ],'12km':[7.5, 0.5762, ],'15km':[9.3,0.5776],'10Mile':[10.0,0.5782 ],'20km':[12.4, 0.5968],'H.Mar':[13.1,0.5968 ],'25km':[15.5,0.5968],'30km':[18.6,0.5968],'Marathon':[26.2,0.5968],'50km':[31.1,0.5968],'50Mile':[50.0,0.5968], '100km':[62.1,0.5968 ],'150km':[93.2,0.5968],'100Mile':[100.0, 0.5968 ],'200km':[124.2,0.5968 ]},
-
-  '84':{ '5km':[3.1,0.5782 ],'6km':[3.7, 0.5604],'4Mile':[4.0,0.5586 ],'8km':[5.0,0.5586 ],'5Mile':[5.0, 0.5587 ],'10km':[6.2,0.5587 ],'12km':[7.5,0.5587],'15km':[9.3,0.5603],'10Mile':[10.0, 0.5609],'20km':[12.4,0.5625 ],'H.Mar':[13.1,0.563 ],'25km':[15.5,0.563],'30km':[18.6,0.563],'Marathon':[26.2,0.563],'50km':[31.1, 0.563],'50Mile':[50.0,0.563], '100km':[62.1,0.563],'150km':[93.2,0.563],'100Mile':[100.0,0.563],'200km':[124.2,0.563]},
+  //_________________________________________________________________
+  //GET BASE PACE
+  //---------———————————————————————————————————————————–––––––––––––
+  function getBasePace (pace, windOffset, heatOffset, globals){
+    var totalOffset = windOffsetSeconds + heatOffsetSeconds;
+    globals = pace - totalOffset;
   
-
-  '85':{ '5km':[3.1,0.5609 ],'6km':[3.7,0.5427],'4Mile':[4.0,0.5407 ],'8km':[5.0, 0.5408],'5Mile':[5.0, 0.5409 ],'10km':[6.2,0.5398],'12km':[7.5,0.541 ],'15km':[9.3,0.5424],'10Mile':[10.0, 0.543],'20km':[12.4,0.5446],'H.Mar':[13.1,0.5451],'25km':[15.5, 0.5451],'30km':[18.6,0.5451],'Marathon':[26.2,0.5451 ],'50km':[31.1, 0.5451],'50Mile':[50.0,0.5451], '100km':[62.1,0.5451],'150km':[93.2,0.5451],'100Mile':[100.0,0.5451],'200km':[124.2,0.5451 ]},
-
-  '86':{ '5km':[3.1,0.5262 ],'6km':[3.7,0.5243 ],'4Mile':[4.0,0.5223 ],'8km':[5.0,0.5223 ],'5Mile':[5.0,0.5224  ],'10km':[6.2,0.5213 ],'12km':[7.5,0.5224 ],'15km':[9.3,0.5238],'10Mile':[10.0,0.5244 ],'20km':[12.4, 0.5451],'H.Mar':[13.1,0.5265 ],'25km':[15.5,0.5265],'30km':[18.6,0.5265],'Marathon':[26.2,0.5265],'50km':[31.1,0.5265 ],'50Mile':[50.0, 0.5265], '100km':[62.1, 0.5265],'150km':[93.2,0.5265],'100Mile':[100.0,0.5265  ],'200km':[124.2,0.5265 ]},
-
-  '87':{ '5km':[3.1,0.5074 ],'6km':[3.7,0.5074],'4Mile':[4.0,0.5032],'8km':[5.0,0.5032],'5Mile':[5.0, 0.5033 ],'10km':[6.2,0.502],'12km':[7.5,0.5031 ],'15km':[9.3,0.5045],'10Mile':[10.0,0.505 ],'20km':[12.4, 0.5066],'H.Mar':[13.1,0.5071],'25km':[15.5,0.5071],'30km':[18.6,0.5071],'Marathon':[26.2, 0.5071],'50km':[31.1,0.5071],'50Mile':[50.0, 0.5071], '100km':[62.1,0.5071],'150km':[93.2,0.5071],'100Mile':[100.0,0.5071],'200km':[124.2,0.5071]},
+  }
   
-
-  '88':{ '5km':[3.1,0.4879 ],'6km':[3.7,0.4856],'4Mile':[4.0,0.4834 ],'8km':[5.0,0.4835 ],'5Mile':[5.0,0.4835  ],'10km':[6.2, 0.4821],'12km':[7.5, 0.4832],'15km':[9.3,0.4845],'10Mile':[10.0,0.485 ],'20km':[12.4,0.5071],'H.Mar':[13.1,0.5071],'25km':[15.5,0.5071],'30km':[18.6,0.5071 ],'Marathon':[26.2,0.5071],'50km':[31.1,0.5071 ],'50Mile':[50.0,0.5071], '100km':[62.1,0.5071],'150km':[93.2,0.5071],'100Mile':[100.0,0.5071],'200km':[124.2,0.5071]},
-
-
-  '89':{ '5km':[3.1,0.4678 ],'6km':[3.7,0.4653 ],'4Mile':[4.0, 0.463],'8km':[5.0, 0.463],'5Mile':[5.0, 0.4631 ],'10km':[6.2,0.4616 ],'12km':[7.5,0.4626 ],'15km':[9.3,0.4638],'10Mile':[10.0,0.4644 ],'20km':[12.4, 0.5071],'H.Mar':[13.1,0.4664],'25km':[15.5, 0.4664],'30km':[18.6,0.4664],'Marathon':[26.2, 0.4664],'50km':[31.1,0.4664 ],'50Mile':[50.0, 0.4664], '100km':[62.1, 0.4664],'150km':[93.2, 0.4664],'100Mile':[100.0,0.4664],'200km':[124.2, 0.4664]},
-
-  '90':{ '5km':[3.1, 0.447],'6km':[3.7, 0.4443],'4Mile':[4.0,0.442 ],'8km':[5.0, 0.442],'5Mile':[5.0,  0.442],'10km':[6.2, 0.4404],'12km':[7.5,0.4413 ],'15km':[9.3,0.4425],'10Mile':[10.0, 0.443],'20km':[12.4,0.4444 ],'H.Mar':[13.1,0.4449 ],'25km':[15.5,0.4449 ],'30km':[18.6,0.4449 ],'Marathon':[26.2, 0.4449],'50km':[31.1, 0.4449],'50Mile':[50.0, 0.4449], '100km':[62.1,0.4449],'150km':[93.2,0.4449 ],'100Mile':[100.0, 0.4449 ],'200km':[124.2,0.4449 ]},
-
-  '91':{ '5km':[3.1,0.4257 ],'6km':[3.7,0.4228 ],'4Mile':[4.0, 0.4204],'8km':[5.0,0.4203 ],'5Mile':[5.0,0.4203  ],'10km':[6.2,0.4185 ],'12km':[7.5,0.4194 ],'15km':[9.3,0.4204],'10Mile':[10.0,0.4209 ],'20km':[12.4,0.4223 ],'H.Mar':[13.1,0.4228],'25km':[15.5,0.4228 ],'30km':[18.6,0.4228 ],'Marathon':[26.2, 0.4228],'50km':[31.1, 0.4228],'50Mile':[50.0,0.4228 ], '100km':[62.1, 0.4228],'150km':[93.2, 0.4228],'100Mile':[100.0,0.4228  ],'200km':[124.2,0.4228 ]},
-
-  '92':{ '5km':[3.1,0.4037],'6km':[3.7,0.4005 ],'4Mile':[4.0,0.3981 ],'8km':[5.0, 0.3979],'5Mile':[5.0, 0.398 ],'10km':[6.2,0.396],'12km':[7.5, 0.3968],'15km':[9.3,0.3977],'10Mile':[10.0,0.3982 ],'20km':[12.4, 0.3994],'H.Mar':[13.1,0.4 ],'25km':[15.5,0.4 ],'30km':[18.6,0.4 ],'Marathon':[26.2,0.4 ],'50km':[31.1, 0.4],'50Mile':[50.0,0.4 ], '100km':[62.1,0.4],'150km':[93.2,0.4 ],'100Mile':[100.0,0.4 ],'200km':[124.2,0.4]},
-
-
-  '93':{ '5km':[3.1,0.3811 ],'6km':[3.7,0.3777 ],'4Mile':[4.0, 0.3751],'8km':[5.0,0.3749 ],'5Mile':[5.0,0.375  ],'10km':[6.2, 0.3728],'12km':[7.5,0.3735 ],'15km':[9.3,0.3743],'10Mile':[10.0, 0.3748],'20km':[12.4,0.3759 ],'H.Mar':[13.1,0.3764 ],'25km':[15.5,0.3764 ],'30km':[18.6, 0.3764],'Marathon':[26.2,0.3764 ],'50km':[31.1, 0.3764],'50Mile':[50.0,0.3764 ], '100km':[62.1,0.3764 ],'150km':[93.2, 0.3764],'100Mile':[100.0,  0.3764],'200km':[124.2, 0.3764]},
+  //_________________________________________________________________
+  //ADJUST BASE PACE VIA CURRENT TEMP, WIND
+  //---------———————————————————————————————————————————–––––––––––––
   
-
-  '94':{ '5km':[3.1,0.3578 ],'6km':[3.7, 0.3542],'4Mile':[4.0, 0.3516],'8km':[5.0,0.3512 ],'5Mile':[5.0, 0.3513 ],'10km':[6.2,0.3489 ],'12km':[7.5,0.3495 ],'15km':[9.3,0.3502],'10Mile':[10.0,0.3506 ],'20km':[12.4,0.3517 ],'H.Mar':[13.1,0.3522 ],'25km':[15.5,0.3522 ],'30km':[18.6,0.3522],'Marathon':[26.2,0.3522 ],'50km':[31.1, 0.3522],'50Mile':[50.0, 0.3522], '100km':[62.1, 0.3522],'150km':[93.2,0.3522 ],'100Mile':[100.0,0.3522  ],'200km':[124.2, 0.3522]},
-
-  '95':{ '5km':[3.1,0.334],'6km':[3.7,0.3301 ],'4Mile':[4.0,0.3273 ],'8km':[5.0, 0.3269],'5Mile':[5.0,  0.3269],'10km':[6.2,0.3269 ],'12km':[7.5,0.3249 ],'15km':[9.3,0.3255],'10Mile':[10.0,0.3258],'20km':[12.4,0.3267 ],'H.Mar':[13.1,0.3273 ],'25km':[15.5,0.3273 ],'30km':[18.6, 0.3273],'Marathon':[26.2,0.3273 ],'50km':[31.1,0.3273 ],'50Mile':[50.0,0.3273], '100km':[62.1,0.3273 ],'150km':[93.2, 0.3273],'100Mile':[100.0, 0.3273 ],'200km':[124.2, 0.3273]},
-
-
-  '96':{ '5km':[3.1,0.3095],'6km':[3.7, 0.3053],'4Mile':[4.0,0.3025 ],'8km':[5.0, 0.302],'5Mile':[5.0, 0.327 ],'10km':[6.2, ],'12km':[7.5, ],'15km':[9.3,],'10Mile':[10.0, ],'20km':[12.4,0.3011 ],'H.Mar':[13.1,0.3017 ],'25km':[15.5, 0.3017],'30km':[18.6,0.3017 ],'Marathon':[26.2,0.3017 ],'50km':[31.1, 0.3017],'50Mile':[50.0, 0.3017], '100km':[62.1,0.3017 ],'150km':[93.2, 0.3017],'100Mile':[100.0, 0.3017 ],'200km':[124.2,0.3017 ]},
-
-  '97':{ '5km':[3.1,0.2844 ],'6km':[3.7,0.2799 ],'4Mile':[4.0,0.277 ],'8km':[5.0,0.2764 ],'5Mile':[5.0, 0.2765 ],'10km':[6.2,0.2734 ],'12km':[7.5, 0.2736],'15km':[9.3,0.2739],'10Mile':[10.0,0.2742],'20km':[12.4,0.2748 ],'H.Mar':[13.1,0.2753 ],'25km':[15.5,0.2753 ],'30km':[18.6, 0.2753],'Marathon':[26.2, 0.2753],'50km':[31.1,0.2753 ],'50Mile':[50.0,0.2753 ], '100km':[62.1, ],'150km':[93.2, 0.2753],'100Mile':[100.0, 0.2753 ],'200km':[124.2, 0.2753]},
-
-  '98':{ '5km':[3.1,0.2586 ],'6km':[3.7,0.2538 ],'4Mile':[4.0, 0.2509],'8km':[5.0,0.2501],'5Mile':[5.0,0.2502  ],'10km':[6.2,0.247 ],'12km':[7.5,0.247 ],'15km':[9.3,0.2471],'10Mile':[10.0,0.2473 ],'20km':[12.4,0.2478 ],'H.Mar':[13.1,0.2483],'25km':[15.5, 0.2483],'30km':[18.6, 0.2483],'Marathon':[26.2,0.2483 ],'50km':[31.1,0.2483 ],'50Mile':[50.0,0.2483 ], '100km':[62.1,0.2483 ],'150km':[93.2,0.2483 ],'100Mile':[100.0,  0.2483],'200km':[124.2, 0.2483]},
-
-
-  '99':{ '5km':[3.1,0.2323],'6km':[3.7,0.2272 ],'4Mile':[4.0,0.2241 ],'8km':[5.0,0.2232 ],'5Mile':[5.0, 0.2234 ],'10km':[6.2,0.2198],'12km':[7.5,0.2198],'15km':[9.3,0.2196],'10Mile':[10.0,0.2198],'20km':[12.4,0.2201 ],'H.Mar':[13.1,0.2206 ],'25km':[15.5,0.2206 ],'30km':[18.6,0.2206 ],'Marathon':[26.2,0.2206 ],'50km':[31.1,0.2206 ],'50Mile':[50.0,0.2206 ], '100km':[62.1, 0.2206],'150km':[93.2, 0.2206],'100Mile':[100.0,  0.2206],'200km':[124.2, 0.2206]},
-
-  '100':{ '5km':[3.1, 0.2053],'6km':[3.7,0.1998 ],'4Mile':[4.0, 0.1967],'8km':[5.0,0.1957],'5Mile':[5.0, 0.1958 ],'10km':[6.2,0.192 ],'12km':[7.5,0.1917 ],'15km':[9.3,0.1914],'10Mile':[10.0,0.1916 ],'20km':[12.4,0.1917 ],'H.Mar':[13.1, 0.1921],'25km':[15.5,0.1921 ],'30km':[18.6, 0.1921],'Marathon':[26.2,0.1921 ],'50km':[31.1, 0.1921],'50Mile':[50.0,0.1921 ], '100km':[62.1,0.1921 ],'150km':[93.2, 0.1921],'100Mile':[100.0, 0.1921 ],'200km':[124.2, 0.1921]},
-}
-// ------------------Female-------------------------------------------------------------
-
-var womens = {
-  OC: { '5km': [3.1,886] ,'6km': [3.7,1071], '4Mile': [4.0,1152], '8km': [5.0,1442], '5Mile': [5.0,1452], '10km': [6.2,1820], '12km': [7.52194], '15km': [9.3,2755], '10Mile': [10.0,2961], '20km': [12.4,3700], 'H.Mar': [13.1,3912], '25km': [15.5,4665], '30km': [18.6,5660], 'Marathon': [26.2,8125], '50km': [31.1,9820], '50Mile': [50.0,17760], '100km': [62.1,23591], '150km': [93.2,39700], '100Mile': [100.0,43500], '200km': [124.2,57600]},
-
-  '5': { '5km': [3.1,0.7010 ] ,'6km': [3.7,0.6930], '4Mile': [4.0,0.6930], '8km': [5.0, 0.6930], '5Mile': [5.0,0.6930], '10km': [6.2,0.6930], '12km': [7.5,0.6930], '15km': [9.3,0.5945], '10Mile': [10.0,0.6525], '20km': [12.4, 0.6525], 'H.Mar': [13.1,0.5945], '25km': [15.5, 0.6525, ], '30km': [18.6, 0.6525], 'Marathon': [26.2, ], '50km': [31.1,0.6930], '50Mile': [50.0,0.6930], '100km': [62.1,0.6930], '150km': [93.2,0.6930], '100Mile': [100.0,0.6930], '200km': [124.2,0.6930]},
-
-  '6': { '5km': [3.1,0.6525] ,'6km': [3.7,0.7263], '4Mile': [4.0,0.7263], '8km': [5.0,0.7263], '5Mile': [5.0,0.7263], '10km': [6.2,0.7263], '12km': [7.5,0.7263  ], '15km': [9.3,0.6382], '10Mile': [10.0,0.6924], '20km': [12.4,0.6924], 'H.Mar': [13.1,0.6382], '25km': [15.5,0.6924], '30km': [18.6,0.6924], 'Marathon': [26.2,0.7263], '50km': [31.1,0.7263], '50Mile': [50.0,0.7263], '100km': [62.1,0.7263], '150km': [93.2,0.7263], '100Mile': [100.0,0.7263], '200km': [124.2,0.7263]},
-
-  '7': { '5km': [3.1, 0.7658] ,'6km': [3.7,0.7578], '4Mile': [4.0,0.7578], '8km': [5.0,0.7578], '5Mile': [5.0,0.7578], '10km': [6.2,0.7578], '12km': [7.5,0.7578  ], '15km': [9.3,0.7578], '10Mile': [10.0,0.7301], '20km': [12.4,0.7301], 'H.Mar': [13.1,0.6793], '25km': [15.5,0.7301], '30km': [18.6, 0.7301], 'Marathon': [26.2,0.7578], '50km': [31.1,0.7578], '50Mile': [50.0,0.7578], '100km': [62.1,0.7578], '150km': [93.2,0.7578], '100Mile': [100.0,0.7578], '200km': [124.2,0.7578]},
-
-  '8': { '5km': [3.1,0.7954 ] ,'6km': [3.7,0.7874], '4Mile': [4.0,0.7874], '8km': [5.0,0.7874], '5Mile': [5.0,0.7874], '10km': [6.2,0.7874], '12km': [7.5, 0.7874 ], '15km': [9.3,0.7178], '10Mile': [10.0,0.7656], '20km': [12.4,0.7656], 'H.Mar': [13.1, ], '25km': [15.5,0.7656], '30km': [18.6,0.7656], 'Marathon': [26.2,0.7874], '50km': [31.1,0.7874], '50Mile': [50.0,0.7874], '100km': [62.1,0.7874], '150km': [93.2,0.7874], '100Mile': [100.0,0.7874], '200km': [124.2,0.7874]},
-
-  '9': { '5km': [3.1,0.8232 ] ,'6km': [3.7,0.8152], '4Mile': [4.0,0.8152], '8km': [5.0,0.8152], '5Mile': [5.0,0.8152], '10km': [6.2,0.8152], '12km': [7.5, 0.8152 ], '15km': [9.3,0.7537], '10Mile': [10.0,0.7989], '20km': [12.4,0.7989], 'H.Mar': [13.1,0.7537], '25km': [15.5,0.7989], '30km': [18.6,0.7989], 'Marathon': [26.2,0.8152], '50km': [31.1,0.8152], '50Mile': [50.0,0.8152], '100km': [62.1,0.8152], '150km': [93.2,0.8152], '100Mile': [100.0,0.8152], '200km': [124.2,0.8152]},
-
-  '10': { '5km': [3.1,0.8493 ] ,'6km': [3.7,0.8413], '4Mile': [4.0,0.8413], '8km': [5.0,0.8413], '5Mile': [5.0,0.8413], '10km': [6.2,0.8413], '12km': [7.5,0.8413  ], '15km': [9.3,0.7870], '10Mile': [10.0,0.8300], '20km': [12.4,0.8300], 'H.Mar': [13.1,0.7870], '25km': [15.5,0.8300], '30km': [18.6,0.8300], 'Marathon': [26.2,0.8413], '50km': [31.1,0.8413], '50Mile': [50.0,0.8413], '100km': [62.1,0.8413], '150km': [93.2,0.8413], '100Mile': [100.0,0.8413], '200km': [124.2,0.8413]},
-
-  '11': { '5km': [3.1,0.8734 ] ,'6km': [3.7,0.8654], '4Mile': [4.0,0.8654], '8km': [5.0,0.8654], '5Mile': [5.0,0.8654], '10km': [6.2,0.8654], '12km': [7.5, 0.8654 ], '15km': [9.3,0.8177], '10Mile': [10.0,0.8589], '20km': [12.4,0.8589], 'H.Mar': [13.1,0.8177], '25km': [15.5,0.8589], '30km': [18.6,0.8589], 'Marathon': [26.2,0.8654], '50km': [31.1,0.8654], '50Mile': [50.0,0.8654], '100km': [62.1,0.8654], '150km': [93.2,0.8654], '100Mile': [100.0, ], '200km': [124.2,0.8654]},
-
-  '12': { '5km': [3.1,0.8958 ] ,'6km': [3.7,0.8878], '4Mile': [4.0,0.8878], '8km': [5.0,0.8878], '5Mile': [5.0,0.8878], '10km': [6.2,0.8878], '12km': [7.5,0.8878  ], '15km': [9.3,0.8458], '10Mile': [10.0,0.8856], '20km': [12.4,0.8856], 'H.Mar': [13.1,0.8458], '25km': [15.5,0.8856], '30km': [18.6,0.8856], 'Marathon': [26.2,0.8878], '50km': [31.1,0.8878], '50Mile': [50.0,0.8878], '100km': [62.1,0.8878], '150km': [93.2,0.8878], '100Mile': [100.0,0.8878], '200km': [124.2,0.8878]},
-
-  '13': { '5km': [3.1,0.9164] ,'6km': [3.7,0.9084], '4Mile': [4.0,0.9084], '8km': [5.0,0.9084], '5Mile': [5.0,0.9084], '10km': [6.2,0.9084], '12km': [7.5, 0.9084 ], '15km': [9.3,0.8713], '10Mile': [10.0,0.9101], '20km': [12.4,0.9101], 'H.Mar': [13.1,0.8713], '25km': [15.5,0.9101], '30km': [18.6,0.9101], 'Marathon': [26.2,0.9084], '50km': [31.1,0.9084], '50Mile': [50.0,0.9084], '100km': [62.1,0.9084], '150km': [93.2,0.9084], '100Mile': [100.0,0.9084], '200km': [124.2,0.9084]},
-
-  '14': { '5km': [3.1,0.9351] ,'6km': [3.7,0.9271], '4Mile': [4.0,0.9271], '8km': [5.0,0.9271], '5Mile': [5.0,0.9271], '10km': [6.2,0.9271], '12km': [7.5,0.9271  ], '15km': [9.3,0.8942], '10Mile': [10.0,0.9324], '20km': [12.4,0.9324], 'H.Mar': [13.1,0.8942], '25km': [15.5,0.9324], '30km': [18.6,0.9324], 'Marathon': [26.2,0.9271], '50km': [31.1,0.9271], '50Mile': [50.0,0.9271], '100km': [62.1,0.9271], '150km': [93.2,0.9271], '100Mile': [100.0,0.9271], '200km': [124.2,0.9271]},
+  function adjustedPace (basePace, windOffsetSeconds, paceRange) {
+    var windAdjustedPace = basePace + windOffsetSeconds;
+    var cpPace = Math.floor(windAdjustedPace);
+    
+    for (var i = 0; i< paceRange.length; i++) {
+      var paceMins = Math.floor (cpPace/60);
+      var paceSecs = cpPace - (paceMins*60);
+      if (paceSecs < 10) {
+          paceSecs = '0'+ paceSecs;
+        }
+      formattedPace = paceMins + ":" + paceSecs;
+    FinalAdjustedPaceG.push(windAdjustedPace + paceRange[i]);
+    
+    }
+  }
   
-
-  '15': { '5km': [3.1,0.9520 ] ,'6km': [3.7,0.9440], '4Mile': [4.0,0.9440], '8km': [5.0,0.9440], '5Mile': [5.0,0.9440], '10km': [6.2,0.9440], '12km': [7.5, 0.9440 ], '15km': [9.3,0.9145], '10Mile': [10.0,0.9525], '20km': [12.4,0.9525], 'H.Mar': [13.1,0.9145], '25km': [15.5,0.9525], '30km': [18.6,0.9525], 'Marathon': [26.2,0.9440], '50km': [31.1,0.9440], '50Mile': [50.0,0.9440], '100km': [62.1,0.9440], '150km': [93.2,0.9440], '100Mile': [100.0,0.9440], '200km': [124.2,0.9440]},
-
-  '16': { '5km': [3.1,0.9680 ] ,'6km': [3.7,0.9600], '4Mile': [4.0,0.9600], '8km': [5.0,0.9600], '5Mile': [5.0,0.9600], '10km': [6.2,0.9600], '12km': [7.5, 0.9600 ], '15km': [9.3,0.9335], '10Mile': [10.0,0.9715], '20km': [12.4,0.9715], 'H.Mar': [13.1,0.9335], '25km': [15.5,0.9715], '30km': [18.6,0.9715], 'Marathon': [26.2,0.9600], '50km': [31.1,0.9600], '50Mile': [50.0,0.9600], '100km': [62.1,0.9600], '150km': [93.2,0.9600], '100Mile': [100.0,0.9600], '200km': [124.2,0.9600]},
-
-  '17': { '5km': [3.1,0.9840 ] ,'6km': [3.7,0.9760], '4Mile': [4.0,0.9760], '8km': [5.0,0.9760], '5Mile': [5.0,0.9760], '10km': [6.2,0.9760], '12km': [7.5, 0.9760 ], '15km': [9.3,0.9525], '10Mile': [10.0,0.9905], '20km': [12.4,0.9905], 'H.Mar': [13.1,0.9525], '25km': [15.5,0.9905], '30km': [18.6,0.9905], 'Marathon': [26.2,0.9760], '50km': [31.1,0.9760], '50Mile': [50.0,0.9760], '100km': [62.1,0.9760], '150km': [93.2,0.9760], '100Mile': [100.0,0.9760], '200km': [124.2,0.9760]},
+  //_________________________________________________________________
+  //INITIALIZE VARIABLES (ie giant callback)
+  //---------———————————————————————————————————————————–––––––––––––
+   function initVars(){
+    //this will go at end; grab all variables from form, make global variables
+    paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, pAvgPaceG); //  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, cPaceRangeG);
+    windOffset(pWindmphG, pPacemphG, pWindSecOffsetG);
+    heatEffect(pTempG, pDewG, pHeatSecOffsetG);
+  }
   
-
-  '18': { '5km': [3.1,0.9960 ] ,'6km': [3.7,0.9893], '4Mile': [4.0,0.9893], '8km': [5.0,0.9893], '5Mile': [5.0,0.9893], '10km': [6.2,0.9893], '12km': [7.5, 0.9893 ], '15km': [9.3,0.9696], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,0.9696], '25km': [15.5,1.0000], '30km': [18.6, 1.0000], 'Marathon': [26.2,0.9893 ], '50km': [31.1, 0.9893], '50Mile': [50.0,0.9893 ], '100km': [62.1, 0.9893], '150km': [93.2, 0.9893], '100Mile': [100.0, 0.9893], '200km': [124.2, 0.9893]},
-
-  '19': { '5km': [3.1,1.0000] ,'6km': [3.7,0.9973 ], '4Mile': [4.0,0.9973 ], '8km': [5.0,0.9973 ], '5Mile': [5.0, 0.9973], '10km': [6.2,0.9973 ], '12km': [7.5, 0.9973 ], '15km': [9.3,0.9829], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,0.9829 ], '25km': [15.5, 1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,0.9973 ], '50km': [31.1, 0.9973], '50Mile': [50.0, 0.9973], '100km': [62.1,0.9973 ], '150km': [93.2,0.9973], '100Mile': [100.0,0.9973 ], '200km': [124.2,0.9973 ]},
-
+  function initVars2() {
+    windOffset(cWindmphG, cPacemphG, cWindSecOffsetG);
+    heatEffect(cTempG, cDewG, cHeatSecOffsetG);
+  }
   
-
-  '20': { '5km': [3.1,1.0000 ] ,'6km': [3.7,1.0000 ], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2, 1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3, 0.9924], '10Mile': [10.0,1.0000 ], '20km': [12.4,1.0000 ], 'H.Mar': [13.1, 0.9924], '25km': [15.5, 1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000 ], '50km': [31.1, 1.0000], '50Mile': [50.0, 1.0000], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000 ], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
-
-  '21': { '5km': [3.1, ] ,'6km': [3.7, ], '4Mile': [4.0, ], '8km': [5.0, ], '5Mile': [5.0, ], '10km': [6.2, ], '12km': [7.5,  ], '15km': [9.3, ], '10Mile': [10.0, ], '20km': [12.4, ], 'H.Mar': [13.1, ], '25km': [15.5, ], '30km': [18.6, ], 'Marathon': [26.2, ], '50km': [31.1, ], '50Mile': [50.0, ], '100km': [62.1, ], '150km': [93.2, ], '100Mile': [100.0, ], '200km': [124.2, ]},
-
-  '22': { '5km': [3.1, ] ,'6km': [3.7, ], '4Mile': [4.0, ], '8km': [5.0, ], '5Mile': [5.0, ], '10km': [6.2, ], '12km': [7.5,  ], '15km': [9.3, ], '10Mile': [10.0, ], '20km': [12.4, ], 'H.Mar': [13.1, ], '25km': [15.5, ], '30km': [18.6, ], 'Marathon': [26.2, ], '50km': [31.1, ], '50Mile': [50.0, ], '100km': [62.1, ], '150km': [93.2, ], '100Mile': [100.0, ], '200km': [124.2, ]},
-
-  '23': { '5km': [3.1,1.0000 ] ,'6km': [3.7,1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0,1.0000], '10km': [6.2, 1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000 ], '20km': [12.4, 1.0000], 'H.Mar': [13.1, 1.0000], '25km': [15.5,1.0000 ], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000 ], '50km': [31.1,1.0000 ], '50Mile': [50.0, 1.0000], '100km': [62.1, 1.0000], '150km': [93.2,1.0000 ], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
-
-  '24': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0,1.0000], '5Mile': [5.0,1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,1.0000], '10Mile': [10.0,1.0000 ], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000], '100Mile': [100.0, 1.0000], '200km': [124.2, 1.0000]},
-
-  '25': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6, 1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000 ], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
   
-
-  '26': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000 ], '4Mile': [4.0,1.0000], '8km': [5.0,1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3, 1.0000], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
-
-
-  '27': { '5km': [3.1, 1.0000] ,'6km': [3.7,1.0000 ], '4Mile': [4.0,1.0000 ], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2, 1.0000], '12km': [7.5,1.0000], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000], '20km': [12.4, 1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
+  //jquery document ready
+  initVars().then(
+    getBasePace (pAvgPaceG, pWindSecOffsetG, pHeatSecOffsetG, basePaceG)
+    .then(adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG))); //make sure these are all global
+  //probably need separate global vars for past and current run times/weather
   
-
-  '28': { '5km': [3.1,1.0000] ,'6km': [3.7, 1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0,1.0000 ], '10km': [6.2,1.0000], '12km': [7.5,1.0000], '15km': [9.3, 1.0000], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000 ], '50Mile': [50.0,1.0000 ], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000 ], '100Mile': [100.0,1.0000 ], '200km': [124.2, 1.0000]},
-
-
-  '29': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3,1.0000], '10Mile': [10.0, 1.0000], '20km': [12.4,1.0000 ], 'H.Mar': [13.1,1.0000 ], '25km': [15.5,1.0000 ], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2, 1.0000], '100Mile': [100.0,1.0000 ], '200km': [124.2,1.0000]},
-
-  '30': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,0.9997 ], '10Mile': [10.0,0.9997 ], '20km': [12.4,0.9997 ], 'H.Mar': [13.1,0.9997 ], '25km': [15.5, 0.9997], '30km': [18.6, 1.0000], 'Marathon': [26.2, ], '50km': [31.1,1.0000 ], '50Mile': [50.0, 1.0000], '100km': [62.1,1.0000], '150km': [93.2, 1.0000], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
-
-  '31': { '5km': [3.1, 0.9998] ,'6km': [3.7,0.9998 ], '4Mile': [4.0,0.9998], '8km': [5.0, 0.9998], '5Mile': [5.0,0.9998], '10km': [6.2,0.9998 ], '12km': [7.5,0.9998  ], '15km': [9.3, 0.9989], '10Mile': [10.0,0.9989 ], '20km': [12.4,0.9989], 'H.Mar': [13.1, 0.9989], '25km': [15.5,0.9989], '30km': [18.6, 0.9998], 'Marathon': [26.2,0.9998 ], '50km': [31.1, 0.9998], '50Mile': [50.0,0.9998 ], '100km': [62.1,0.9998 ], '150km': [93.2, 0.9998], '100Mile': [100.0,0.9998 ], '200km': [124.2,0.9998 ]},
-
-  '32': { '5km': [3.1, 0.9990] ,'6km': [3.7,0.9990], '4Mile': [4.0,0.9990], '8km': [5.0,0.9990], '5Mile': [5.0, 0.9990], '10km': [6.2,0.9989], '12km': [7.5,0.9989  ], '15km': [9.3,0.9989], '10Mile': [10.0, 0.9975], '20km': [12.4,0.9975 ], 'H.Mar': [13.1,0.9975 ], '25km': [15.5,0.9975 ], '30km': [18.6, 0.9975], 'Marathon': [26.2, 0.9989], '50km': [31.1,0.9989], '50Mile': [50.0,0.9989 ], '100km': [62.1, 0.9989], '150km': [93.2,0.9989 ], '100Mile': [100.0,0.9989], '200km': [124.2,0.9989]},
-
-  '33': { '5km': [3.1,0.9977 ] ,'6km': [3.7,0.9977], '4Mile': [4.0,0.9977], '8km': [5.0,0.9976], '5Mile': [5.0,0.9976], '10km': [6.2,0.9975 ], '12km': [7.5,0.9975], '15km': [9.3,0.9956], '10Mile': [10.0,0.9956 ], '20km': [12.4, ], 'H.Mar': [13.1, 0.9956], '25km': [15.5,0.9956 ], '30km': [18.6, 0.9955], 'Marathon': [26.2,0.9975 ], '50km': [31.1, 0.9974], '50Mile': [50.0, 0.9974], '100km': [62.1, 0.9974], '150km': [93.2, 0.9974], '100Mile': [100.0, 0.9974], '200km': [124.2,0.9974 ]},
-
-  '34': { '5km': [3.1, 0.9959] ,'6km': [3.7,0.9958 ], '4Mile': [4.0, 0.9958], '8km': [5.0, 0.9956], '5Mile': [5.0, 0.9956], '10km': [6.2, 0.9955], '12km': [7.5,0.9955  ], '15km': [9.3, 0.9931], '10Mile': [10.0,0.9931 ], '20km': [12.4, 0.9931], 'H.Mar': [13.1, 0.9931], '25km': [15.5, 0.9930], '30km': [18.6,0.9954 ], 'Marathon': [26.2, 0.9953], '50km': [31.1,0.9953], '50Mile': [50.0,0.9953], '100km': [62.1,0.9953], '150km': [93.2,0.9953], '100Mile': [100.0,0.9953], '200km': [124.2, 0.9953]},
-
-  '35': { '5km': [3.1,0.9935] ,'6km': [3.7,0.9933], '4Mile': [4.0, 0.9933], '8km': [5.0,0.9931 ], '5Mile': [5.0, 0.9931], '10km': [6.2,0.9930 ], '12km': [7.5,  0.9930], '15km': [9.3,0.9901 ], '10Mile': [10.0,0.9901 ], '20km': [12.4,0.9901], 'H.Mar': [13.1,0.9901 ], '25km': [15.5,0.9899 ], '30km': [18.6, 0.9928], 'Marathon': [26.2,0.9926 ], '50km': [31.1, 0.9926], '50Mile': [50.0,0.9926], '100km': [62.1, 0.9926], '150km': [93.2,0.9926 ], '100Mile': [100.0, 0.9926], '200km': [124.2, 0.9926]},
-
-
-  '36': { '5km': [3.1, 0.9906] ,'6km': [3.7, 0.9904], '4Mile': [4.0, 0.9903], '8km': [5.0, 0.9900], '5Mile': [5.0,0.9900 ], '10km': [6.2,0.9898], '12km': [7.5, 0.9898 ], '15km': [9.3,0.9865], '10Mile': [10.0, 0.9865], '20km': [12.4,0.9865], 'H.Mar': [13.1,0.9865 ], '25km': [15.5, 0.9863], '30km': [18.6,0.9895], 'Marathon': [26.2,0.9893 ], '50km': [31.1,0.9893 ], '50Mile': [50.0,0.9893 ], '100km': [62.1, 0.9893], '150km': [93.2,0.9893 ], '100Mile': [100.0, 0.9893], '200km': [124.2,0.9893]},
-
-  '37': { '5km': [3.1, 0.9871] ,'6km': [3.7, 0.9868], '4Mile': [4.0,0.9867 ], '8km': [5.0, 0.9864], '5Mile': [5.0, 0.9864], '10km': [6.2, 0.9860], '12km': [7.5,  0.9860], '15km': [9.3,0.9823 ], '10Mile': [10.0,0.9823 ], '20km': [12.4, 0.9823], 'H.Mar': [13.1,0.9823 ], '25km': [15.5, 0.9821], '30km': [18.6,0.9857 ], 'Marathon': [26.2, 0.9854], '50km': [31.1, 0.9854], '50Mile': [50.0, 0.9854], '100km': [62.1,0.9854 ], '150km': [93.2,0.9854 ], '100Mile': [100.0,0.9854 ], '200km': [124.2, 0.9854]},
-
-
-  '38': { '5km': [3.1,0.9831 ] ,'6km': [3.7,0.9827 ], '4Mile': [4.0, 0.9826], '8km': [5.0, 0.9821], '5Mile': [5.0,0.9821 ], '10km': [6.2,0.9817 ], '12km': [7.5,0.9817  ], '15km': [9.3,0.9776 ], '10Mile': [10.0, 0.9776], '20km': [12.4,0.9776 ], 'H.Mar': [13.1,0.9776 ], '25km': [15.5,0.9774 ], '30km': [18.6, 0.9813], 'Marathon': [26.2, 0.9808], '50km': [31.1,0.9808 ], '50Mile': [50.0,0.9808], '100km': [62.1,0.9808 ], '150km': [93.2,0.9808 ], '100Mile': [100.0,0.9808], '200km': [124.2,0.9808 ]},
-
-
-  '39': { '5km': [3.1, 0.9785] ,'6km': [3.7, 0.9781], '4Mile': [4.0, 0.9779], '8km': [5.0, 0.9773], '5Mile': [5.0,0.9773 ], '10km': [6.2, 0.9768], '12km': [7.5,0.9768  ], '15km': [9.3, 0.9724], '10Mile': [10.0,0.9724 ], '20km': [12.4,0.9724 ], 'H.Mar': [13.1,0.9724 ], '25km': [15.5,0.9720 ], '30km': [18.6,0.9762 ], 'Marathon': [26.2, 0.9757], '50km': [31.1,0.9757 ], '50Mile': [50.0,0.9757 ], '100km': [62.1, 0.9757], '150km': [93.2,0.9757 ], '100Mile': [100.0, 0.9757], '200km': [124.2,0.9757 ]},
-
-  '40': { '5km': [3.1, 0.9734] ,'6km': [3.7,0.9728 ], '4Mile': [4.0,0.9726 ], '8km': [5.0,0.9720 ], '5Mile': [5.0, 0.9719], '10km': [6.2, 0.9713], '12km': [7.5,0.9713  ], '15km': [9.3,0.9666 ], '10Mile': [10.0,0.9666 ], '20km': [12.4, 0.9666], 'H.Mar': [13.1, 0.9666], '25km': [15.5, 0.9662], '30km': [18.6,0.9706 ], 'Marathon': [26.2, 0.9699], '50km': [31.1,0.9699 ], '50Mile': [50.0,0.9699 ], '100km': [62.1,0.9699 ], '150km': [93.2, 0.9699], '100Mile': [100.0,0.9699 ], '200km': [124.2,0.9699 ]},
-
-  '41': { '5km': [3.1,0.9678 ] ,'6km': [3.7, 0.9671], '4Mile': [4.0,0.9668 ], '8km': [5.0,0.9660 ], '5Mile': [5.0,0.9660 ], '10km': [6.2,0.9652 ], '12km': [7.5, 0.9652 ], '15km': [9.3, 0.9602], '10Mile': [10.0, 0.9602], '20km': [12.4, 0.9602], 'H.Mar': [13.1,0.9602 ], '25km': [15.5, 0.9597], '30km': [18.6,0.9643 ], 'Marathon': [26.2,0.9635 ], '50km': [31.1, 0.9635], '50Mile': [50.0,0.9635 ], '100km': [62.1,0.9635 ], '150km': [93.2,0.9635 ], '100Mile': [100.0, 0.9635], '200km': [124.2,0.9635 ]},
-
-  '42': { '5km': [3.1,0.9616 ] ,'6km': [3.7, 0.9608], '4Mile': [4.0,0.9605 ], '8km': [5.0, 0.9595], '5Mile': [5.0,0.9594 ], '10km': [6.2, 0.9585], '12km': [7.5, 0.9585 ], '15km': [9.3,0.9533 ], '10Mile': [10.0,0.9533 ], '20km': [12.4, 0.9533], 'H.Mar': [13.1,0.9533 ], '25km': [15.5, 0.9528], '30km': [18.6,0.9575 ], 'Marathon': [26.2,0.9565 ], '50km': [31.1,0.9565 ], '50Mile': [50.0,0.9565 ], '100km': [62.1,0.9565 ], '150km': [93.2,0.9565 ], '100Mile': [100.0, 0.9565], '200km': [124.2, 0.9565]},
-
-
-  '43': { '5km': [3.1,0.9549 ] ,'6km': [3.7,0.9539 ], '4Mile': [4.0, 0.9535], '8km': [5.0, 0.9524], '5Mile': [5.0,0.9523 ], '10km': [6.2, 0.9512], '12km': [7.5,  0.9512], '15km': [9.3,0.9458 ], '10Mile': [10.0,0.9458 ], '20km': [12.4, 0.9458], 'H.Mar': [13.1,0.9458 ], '25km': [15.5,0.9452 ], '30km': [18.6, 0.9489], 'Marathon': [26.2,0.9489 ], '50km': [31.1,0.9489 ], '50Mile': [50.0,0.9489], '100km': [62.1, 0.9489], '150km': [93.2, 0.9489], '100Mile': [100.0, 0.9489], '200km': [124.2,0.9489]},
-
-  '44': { '5km': [3.1,0.9476] ,'6km': [3.7,0.9465 ], '4Mile': [4.0, 0.9460], '8km': [5.0, 0.9447], '5Mile': [5.0, 0.9447], '10km': [6.2, 0.9433], '12km': [7.5,0.9433  ], '15km': [9.3,0.9378], '10Mile': [10.0,0.9378 ], '20km': [12.4,0.9378 ], 'H.Mar': [13.1,0.9378 ], '25km': [15.5,0.9371 ], '30km': [18.6,0.9420 ], 'Marathon': [26.2, 0.9406], '50km': [31.1, 0.9406], '50Mile': [50.0, 0.9406], '100km': [62.1,0.9406 ], '150km': [93.2,0.9406 ], '100Mile': [100.0, 0.9406], '200km': [124.2, 0.9406]},
   
-
-  '45': { '5km': [3.1,0.9398 ] ,'6km': [3.7,0.9385 ], '4Mile': [4.0,0.9380 ], '8km': [5.0,0.9365 ], '5Mile': [5.0, 0.9364], '10km': [6.2, 0.9349], '12km': [7.5,  0.9349], '15km': [9.3,0.9293 ], '10Mile': [10.0,0.9293 ], '20km': [12.4, 0.9293], 'H.Mar': [13.1, 0.9293], '25km': [15.5,0.9284 ], '30km': [18.6, 0.9333], 'Marathon': [26.2,0.9318 ], '50km': [31.1,0.9318 ], '50Mile': [50.0, ], '100km': [62.1,0.9318 ], '150km': [93.2, 0.9318], '100Mile': [100.0, 0.9318], '200km': [124.2,0.9318 ]},
-
-  '46': { '5km': [3.1,0.9314 ] ,'6km': [3.7,0.9300 ], '4Mile': [4.0, 0.9294], '8km': [5.0, 0.9276], '5Mile': [5.0,0.9276 ], '10km': [6.2, 0.9259], '12km': [7.5, 0.9259 ], '15km': [9.3, 0.9201], '10Mile': [10.0,0.9201 ], '20km': [12.4,0.9201 ], 'H.Mar': [13.1,0.9201 ], '25km': [15.5,0.9192 ], '30km': [18.6,0.9241 ], 'Marathon': [26.2,0.9223 ], '50km': [31.1, 0.9223], '50Mile': [50.0, 0.9223], '100km': [62.1, 0.9223], '150km': [93.2, 0.9223], '100Mile': [100.0, 0.9223], '200km': [124.2,0.9223 ]},
-
-  '47': { '5km': [3.1,0.9225 ] ,'6km': [3.7,0.9209 ], '4Mile': [4.0,0.9202 ], '8km': [5.0, 0.9183], '5Mile': [5.0, 0.9182], '10km': [6.2,0.9162], '12km': [7.5,0.9162  ], '15km': [9.3, 0.9105], '10Mile': [10.0, 0.9105], '20km': [12.4, 0.9105], 'H.Mar': [13.1, 0.9105], '25km': [15.5, 0.9094], '30km': [18.6,0.9142 ], 'Marathon': [26.2, 0.9122], '50km': [31.1, 0.9122], '50Mile': [50.0,0.9122 ], '100km': [62.1,0.9122 ], '150km': [93.2,0.9122 ], '100Mile': [100.0, 0.9122], '200km': [124.2, 0.9122]},
   
-
-  '48': { '5km': [3.1,0.9131 ] ,'6km': [3.7, 0.9112], '4Mile': [4.0, 0.9105], '8km': [5.0,0.9083 ], '5Mile': [5.0, 0.9082], '10km': [6.2, 0.9060], '12km': [7.5, 0.9060 ], '15km': [9.3, 0.9003], '10Mile': [10.0, 0.9003], '20km': [12.4, 0.9003], 'H.Mar': [13.1,0.8991], '25km': [15.5,0.9038 ], '30km': [18.6, 0.9016], 'Marathon': [26.2,0.9016 ], '50km': [31.1,0.9016 ], '50Mile': [50.0, 0.9016], '100km': [62.1, 0.9016], '150km': [93.2,0.9016 ], '100Mile': [100.0, 0.9016], '200km': [124.2, 0.9016]},
-
-
-  '49': { '5km': [3.1, 0.9034] ,'6km': [3.7,0.9013 ], '4Mile': [4.0,0.9005 ], '8km': [5.0,0.8981 ], '5Mile': [5.0, 0.8980], '10km': [6.2,0.8955 ], '12km': [7.5,0.8955  ], '15km': [9.3,0.8898 ], '10Mile': [10.0,0.8898 ], '20km': [12.4,0.8898 ], 'H.Mar': [13.1,0.8898 ], '25km': [15.5, 0.8885], '30km': [18.6,0.8930 ], 'Marathon': [26.2,0.8906 ], '50km': [31.1, 0.8906], '50Mile': [50.0,0.8906 ], '100km': [62.1,0.8906 ], '150km': [93.2, 0.8906], '100Mile': [100.0,0.8906 ], '200km': [124.2,0.8906 ]},
-
-  '50':{ '5km':[3.1,0.8937  ],'6km':[3.7, 0.8914],'4Mile':[4.0,0.8905 ],'8km':[5.0,0.8878 ],'5Mile':[5.0, 0.8877 ],'10km':[6.2, 0.8850],'12km':[7.5, 0.8850 ],'15km':[9.3, 0.8793],'10Mile':[10.0, 0.8793],'20km':[12.4,0.8793 ],'H.Mar':[13.1,0.8793 ],'25km':[15.5,0.8778 ],'30km':[18.6, 0.8822],'Marathon':[26.2,0.8796 ],'50km':[31.1, 0.8796],'50Mile':[50.0,0.8796 ], '100km':[62.1, 0.8796],'150km':[93.2, 0.8796],'100Mile':[100.0, 0.8796 ],'200km':[124.2, 0.8796]},
-
-  '51':{ '5km':[3.1,0.8840 ],'6km':[3.7, 0.8815],'4Mile':[4.0, 0.8805],'8km':[5.0,0.8776 ],'5Mile':[5.0,0.8775  ],'10km':[6.2, 0.8745],'12km':[7.5,0.8688  ],'15km':[9.3,0.8688 ],'10Mile':[10.0, 0.8688],'20km':[12.4,0.8688 ],'H.Mar':[13.1, 0.8672],'25km':[15.5,0.8715 ],'30km':[18.6, 0.8686],'Marathon':[26.2, 0.8686],'50km':[31.1, 0.8686],'50Mile':[50.0,0.8686], '100km':[62.1,0.8686],'150km':[93.2,0.8686 ],'100Mile':[100.0,  0.8686],'200km':[124.2,0.8686 ]},
-
-  '52':{ '5km':[3.1, 0.8743 ],'6km':[3.7,0.8716 ],'4Mile':[4.0, 0.8705],'8km':[5.0,0.8673 ],'5Mile':[5.0, 0.8672 ],'10km':[6.2,0.8640 ],'12km':[7.5, 0.8640 ],'15km':[9.3,0.8583 ],'10Mile':[10.0,0.8583 ],'20km':[12.4, 0.8583],'H.Mar':[13.1,0.8583 ],'25km':[15.5,0.8566 ],'30km':[18.6,0.8607 ],'Marathon':[26.2,0.8576 ],'50km':[31.1, 0.8576],'50Mile':[50.0, 0.8576], '100km':[62.1, 0.8576],'150km':[93.2, 0.8576],'100Mile':[100.0, 0.8576 ],'200km':[124.2, 0.8576]},
-
-  '53':{ '5km':[3.1, 0.8645 ],'6km':[3.7,0.8616 ],'4Mile':[4.0, 0.8605],'8km':[5.0,0.8571 ],'5Mile':[5.0,0.8570  ],'10km':[6.2,0.8535 ],'12km':[7.5,0.8535  ],'15km':[9.3,0.8478 ],'10Mile':[10.0, 0.8478],'20km':[12.4,0.8478 ],'H.Mar':[13.1, 0.8478],'25km':[15.5,0.8460 ],'30km':[18.6,0.8500 ],'Marathon':[26.2,0.8466 ],'50km':[31.1, 0.8466],'50Mile':[50.0, 0.8466], '100km':[62.1, 0.8466],'150km':[93.2,0.8466 ],'100Mile':[100.0,  0.8466],'200km':[124.2, 0.8466]},
-
-  '54':{ '5km':[3.1, 0.8548],'6km':[3.7,0.8517 ],'4Mile':[4.0, 0.8505],'8km':[5.0, 0.8468],'5Mile':[5.0, 0.8467 ],'10km':[6.2,0.8430 ],'12km':[7.5, 0.8430 ],'15km':[9.3, 0.8373],'10Mile':[10.0, 0.8373],'20km':[12.4,0.8373 ],'H.Mar':[13.1, 0.8373],'25km':[15.5, 0.8354],'30km':[18.6, 0.8392],'Marathon':[26.2,0.8356 ],'50km':[31.1,0.8356 ],'50Mile':[50.0,0.8356 ], '100km':[62.1, 0.8356],'150km':[93.2, 0.8356],'100Mile':[100.0, 0.8356 ],'200km':[124.2,0.8356 ]},
   
-
-  '55':{ '5km':[3.1,0.8451 ],'6km':[3.7, 0.8418],'4Mile':[4.0, 0.8405],'8km': [5.0,0.8366 ],'5Mile':[5.0, 0.8365 ],'10km':[6.2, 0.8325],'12km':[7.5, 0.8325 ],'15km':[9.3,0.8268 ],'10Mile':[10.0, 0.8268],'20km':[12.4, 0.8268],'H.Mar':[13.1, 0.8268],'25km':[15.5, 0.8247],'30km':[18.6, 0.8285],'Marathon':[26.2, 0.8246],'50km':[31.1,0.8246 ],'50Mile':[50.0, 0.8246], '100km':[62.1,0.8246],'150km':[93.2, ],'100Mile':[100.0,0.8246  ],'200km':[124.2, 0.8246]},
-
-  '56':{ '5km':[3.1,0.8354 ],'6km':[3.7,0.8319 ],'4Mile':[4.0, 0.8305],'8km':[5.0, 0.8263],'5Mile':[5.0,0.8262  ],'10km':[6.2,0.8220 ],'12km':[7.5, 0.8220 ],'15km':[9.3, 0.8163],'10Mile':[10.0,0.8163 ],'20km':[12.4, 0.8163],'H.Mar':[13.1, 0.8163],'25km':[15.5, 0.8141],'30km':[18.6,0.8177 ],'Marathon':[26.2, ],'50km':[31.1,0.8136 ],'50Mile':[50.0, 0.8136], '100km':[62.1,0.8136 ],'150km':[93.2, 0.8136],'100Mile':[100.0, 0.8136 ],'200km':[124.2,0.8136 ]},
-
-  '57':{ '5km':[3.1,0.8257 ],'6km':[3.7,0.8220 ],'4Mile':[4.0, 0.8205],'8km':[5.0, 0.8161],'5Mile':[5.0, 0.8160 ],'10km':[6.2,0.8115 ],'12km':[7.5, 0.8115 ],'15km':[9.3, 0.8058],'10Mile':[10.0, 0.8058],'20km':[12.4, 0.8058],'H.Mar':[13.1,0.8058 ],'25km':[15.5,0.8035 ],'30km':[18.6, 0.8070],'Marathon':[26.2,0.8026 ],'50km':[31.1, 0.8026],'50Mile':[50.0, 0.8026], '100km':[62.1, 0.8026],'150km':[93.2, 0.8026],'100Mile':[100.0, 0.8026 ],'200km':[124.2, 0.8026]},
   
-
-  '58':{ '5km':[3.1,0.8160 ],'6km':[3.7,0.8121 ],'4Mile':[4.0,0.8105 ],'8km':[5.0,0.8058 ],'5Mile':[5.0,  0.8057],'10km':[6.2, 0.8010],'12km':[7.5,0.8010  ],'15km':[9.3, 0.7953],'10Mile':[10.0, 0.7953],'20km':[12.4, 0.7953],'H.Mar':[13.1, 0.7953],'25km':[15.5, 0.7929],'30km':[18.6, 0.7962],'Marathon':[26.2,0.7916 ],'50km':[31.1, 0.7916],'50Mile':[50.0,0.7916 ], '100km':[62.1, 0.7916],'150km':[93.2, 0.7916],'100Mile':[100.0,  0.7916],'200km':[124.2, 0.7916]},
-
-
-  '59':{ '5km':[3.1, 0.8063],'6km':[3.7,0.8021 ],'4Mile':[4.0, 0.8005],'8km':[5.0, 0.7956],'5Mile':[5.0,0.7955  ],'10km':[6.2, 0.7905],'12km':[7.5,  0.7905],'15km':[9.3, 0.7848],'10Mile':[10.0, 0.7848],'20km':[12.4,0.7848 ],'H.Mar':[13.1,0.7848 ],'25km':[15.5,0.7822 ],'30km':[18.6,0.7855 ],'Marathon':[26.2,0.7806 ],'50km':[31.1,0.7806 ],'50Mile':[50.0,0.7806 ], '100km':[62.1, 0.7806],'150km':[93.2,0.7806 ],'100Mile':[100.0, 0.7806 ],'200km':[124.2,0.7806 ]},
-
-  '60':{ '5km':[3.1,0.7966 ],'6km':[3.7, 0.7922],'4Mile':[4.0,0.7905 ],'8km':[5.0,0.7854 ],'5Mile':[5.0,  0.7852],'10km':[6.2,0.7800 ],'12km':[7.5,  0.7800],'15km':[9.3,0.7743 ],'10Mile':[10.0,0.7743 ],'20km':[12.4, 0.7743],'H.Mar':[13.1, 0.7743],'25km':[15.5,0.7716 ],'30km':[18.6, 0.7747],'Marathon':[26.2, 0.7696],'50km':[31.1, 0.7696],'50Mile':[50.0, 0.7696], '100km':[62.1, 0.7696],'150km':[93.2,0.7696 ],'100Mile':[100.0,  0.7696],'200km':[124.2, 0.7696]},
-
-  '61':{ '5km':[3.1,0.7869 ],'6km':[3.7,0.7823 ],'4Mile':[4.0, 0.7805],'8km':[5.0,0.7751 ],'5Mile':[5.0, 0.7750 ],'10km':[6.2, 0.7695],'12km':[7.5, 0.7695 ],'15km':[9.3, 0.7638],'10Mile':[10.0, 0.7638],'20km':[12.4,0.7638 ],'H.Mar':[13.1, 0.7638],'25km':[15.5,0.7610 ],'30km':[18.6, 0.7640],'Marathon':[26.2, 0.7586],'50km':[31.1, 0.7586],'50Mile':[50.0,0.7586 ], '100km':[62.1,0.7586],'150km':[93.2, 0.7586],'100Mile':[100.0,0.7586  ],'200km':[124.2,0.7586 ]},
-
-  '62':{ '5km':[3.1,0.7772 ],'6km':[3.7,0.7724 ],'4Mile':[4.0, 0.7705],'8km':[5.0,0.7649 ],'5Mile':[5.0, 0.7647 ],'10km':[6.2,0.7590 ],'12km':[7.5, 0.7590 ],'15km':[9.3,0.7533 ],'10Mile':[10.0, 0.7533],'20km':[12.4,0.7533 ],'H.Mar':[13.1, 0.7533],'25km':[15.5, 0.7504],'30km':[18.6,0.7532 ],'Marathon':[26.2, 0.7476],'50km':[31.1,0.7476 ],'50Mile':[50.0,0.7476], '100km':[62.1,0.7476 ],'150km':[93.2,0.7476 ],'100Mile':[100.0,  0.7476],'200km':[124.2, 0.7476]},
-
-  '63':{ '5km':[3.1,0.7674 ],'6km':[3.7, 0.7625],'4Mile':[4.0, 0.7605],'8km':[5.0, 0.7546],'5Mile':[5.0, 0.7545 ],'10km':[6.2,0.7485 ],'12km':[7.5,0.7485  ],'15km':[9.3, 0.7428],'10Mile':[10.0,0.7428 ],'20km':[12.4,0.7428 ],'H.Mar':[13.1, 0.7428],'25km':[15.5, 0.7398],'30km':[18.6,0.7424 ],'Marathon':[26.2, 0.7366],'50km':[31.1, 0.7366],'50Mile':[50.0, 0.7366], '100km':[62.1, 0.7366],'150km':[93.2, 0.7366, ],'100Mile':[100.0, 0.7366 ],'200km':[124.2, 0.7366]},
-
-  '64':{ '5km':[3.1,  0.7577],'6km':[3.7, 0.7526],'4Mile':[4.0, 0.7506],'8km':[5.0, 0.7444],'5Mile':[5.0, 0.7442 ],'10km':[6.2, 0.7380],'12km':[7.5, 0.7380 ],'15km':[9.3, 0.7323],'10Mile':[10.0,0.7323 ],'20km':[12.4, 0.7323],'H.Mar':[13.1, 0.7323],'25km':[15.5, 0.7291],'30km':[18.6, 0.7317],'Marathon':[26.2,0.7256 ],'50km':[31.1, 0.7256],'50Mile':[50.0,0.7256 ], '100km':[62.1, 0.7256],'150km':[93.2, 0.7256],'100Mile':[100.0, 0.7256 ],'200km':[124.2, 0.7256]},
+  //_________________________________________________________________
+  //AG% CALCULATOR
+  //---------———————————————————————————————————————————–––––––––––––
+  var gender; // gender male/female from user input
+  // var ages = new Array(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100);
+  var pAGP; // AG% of past race time, calculated/ assinged to function AGCalc
+  var gender;
+  var womens = {
+    OC:{'5km': [3.1, 886]},
+    '50': {'5km':[3.1, 0.8937],	
+    '6km':[6, 0.8914]},
+    '60': {'5km':[5, 0.77], 
+    '6km' :[6, .777]}
+  };
+  //console.log("world record time: " + womens.OC['5km'][1]); //this now returns 886 🙌
+  function AGCalc (gender, age, distance, ageRunTime, globals) {
+  age = parseFloat(age), ageRunTime = parseFloat(ageRunTime);
+  if (gender === 'm'){
+    var offset = mens[age][distance][1];
+    var AGadj = (mens['OC'][distance][1])/offset;
+    globals = AGadj/ageRunTime;
+  }
+  if (gender === 'f'){
+    var offset = womens[age][distance][1];
+    var AGadj = (womens['OC'][distance][1])/offset;
+    globals = AGadj/ageRunTime;
+  }
+  // return globals; 
+  }
+  console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
+   AGCalc('f', 50, '5km', 2000);
   
-
-  '65':{ '5km':[3.1,0.7480 ],'6km':[3.7, 0.7426],'4Mile':[4.0, 0.7406],'8km':[5.0,0.7341],'5Mile':[5.0,  0.7340 ],'10km':[6.2,0.7275 ],'12km':[7.5, 0.7275 ],'15km':[9.3,0.7218 ],'10Mile':[10.0, 0.7218],'20km':[12.4,0.7218 ],'H.Mar':[13.1,0.7218 ],'25km':[15.5, 0.7185],'30km':[18.6, 0.7209],'Marathon':[26.2, 0.7146],'50km':[31.1,0.7146 ],'50Mile':[50.0,0.7146 ], '100km':[62.1,0.7146 ],'150km':[93.2,0.7146 ],'100Mile':[100.0,0.7146  ],'200km':[124.2, 0.7146]},
-
-
-  '66':{ '5km':[3.1, 0.7383],'6km':[3.7, 0.7327],'4Mile':[4.0, 0.7306],'8km':[5.0,0.7239 ],'5Mile':[5.0, 0.7237 ],'10km':[6.2, 0.7170],'12km':[7.5, 0.7170 ],'15km':[9.3,0.7113 ],'10Mile':[10.0,0.7113 ],'20km':[12.4,0.7113 ],'H.Mar':[13.1,0.7113 ],'25km':[15.5, 0.7079],'30km':[18.6,0.7102 ],'Marathon':[26.2, 0.7036],'50km':[31.1,0.7036 ],'50Mile':[50.0,0.7036 ], '100km':[62.1,0.7036 ],'150km':[93.2, 0.7036],'100Mile':[100.0, 0.7036 ],'200km':[124.2,0.7036 ]},
-
-  '67':{ '5km':[3.1,0.7286 ],'6km':[3.7, 0.7228],'4Mile':[4.0, 0.7206],'8km':[5.0,0.7136 ],'5Mile':[5.0, 0.7134 ],'10km':[6.2,0.7065 ],'12km':[7.5,  0.7065],'15km':[9.3, 0.7008],'10Mile':[10.0,0.7008 ],'20km':[12.4, 0.7008],'H.Mar':[13.1,0.7008 ],'25km':[15.5,0.6973 ],'30km':[18.6,0.6994 ],'Marathon':[26.2, ],'50km':[31.1,0.6926 ],'50Mile':[50.0, 0.6926], '100km':[62.1, 0.6926],'150km':[93.2, 0.6926],'100Mile':[100.0,0.6926  ],'200km':[124.2,0.6926 ]},
-
+  // End Calculator Script--------------------------------
   
-
-  '68':{ '5km':[3.1, ],'6km':[3.7, ],'4Mile':[4.0, ],'8km':[5.0, ],'5Mile':[5.0,  ],'10km':[6.2, ],'12km':[7.5,  ],'15km':[9.3, ],'10Mile':[10.0, ],'20km':[12.4, ],'H.Mar':[13.1, ],'25km':[15.5, ],'30km':[18.6, ],'Marathon':[26.2, ],'50km':[31.1, ],'50Mile':[50.0, ], '100km':[62.1, ],'150km':[93.2, ],'100Mile':[100.0,  ],'200km':[124.2, ]},
-
-  '69':{ '5km':[3.1,0.7092 ],'6km':[3.7, 0.7030],'4Mile':[4.0,0.7006 ],'8km':[5.0, 0.6931],'5Mile':[5.0, 0.6929,  ],'10km':[6.2,0.6855 ],'12km':[7.5,0.6855  ],'15km':[9.3, 0.6798],'10Mile':[10.0,0.6798 ],'20km':[12.4,0.6798 ],'H.Mar':[13.1,0.6798 ],'25km':[15.5,0.6760 ],'30km':[18.6,0.6779 ],'Marathon':[26.2,0.6706 ],'50km':[31.1,0.6706 ],'50Mile':[50.0, 0.6706], '100km':[62.1,0.6706 ],'150km':[93.2, 0.6706],'100Mile':[100.0, 0.6706 ],'200km':[124.2, 0.6706]},
-
-  '70':{ '5km':[3.1, 0.6995],'6km':[3.7,0.6930 ],'4Mile':[4.0, 0.6906],'8km':[5.0, 0.6829],'5Mile':[5.0, 0.6827 ],'10km':[6.2, 0.6750, ],'12km':[7.5, 0.6750 ],'15km':[9.3, 0.6693],'10Mile':[10.0,0.6693 ],'20km':[12.4, 0.6693],'H.Mar':[13.1, 0.6693],'25km':[15.5,0.6654 ],'30km':[18.6,0.6672 ],'Marathon':[26.2,0.6596 ],'50km':[31.1,0.6596 ],'50Mile':[50.0, 0.6596], '100km':[62.1,0.6596 ],'150km':[93.2, 0.6596],'100Mile':[100.0,0.6596],'200km':[124.2, 0.6596]},
-
-
-  '71':{ '5km':[3.1,0.6898 ],'6km':[3.7,0.6831 ],'4Mile':[4.0, 0.6806],'8km':[5.0,0.6727 ],'5Mile':[5.0,0.6724  ],'10km':[6.2,0.6645 ],'12km':[7.5,  0.6645],'15km':[9.3,0.6588 ],'10Mile':[10.0, 0.6588],'20km':[12.4, 0.6588],'H.Mar':[13.1,0.6588 ],'25km':[15.5,0.6548 ],'30km':[18.6,0.6564 ],'Marathon':[26.2, 0.6486],'50km':[31.1,0.6486 ],'50Mile':[50.0, 0.6486], '100km':[62.1, 0.6486],'150km':[93.2, 0.6486],'100Mile':[100.0, 0.6486 ],'200km':[124.2,0.6486 ]},
-
-  '72':{ '5km':[3.1,0.6801 ],'6km':[3.7,0.6732 ],'4Mile':[4.0, 0.6706],'8km':[5.0, 0.6624],'5Mile':[5.0, 0.6622 ],'10km':[6.2,0.6540 ],'12km':[7.5, 0.6540 ],'15km':[9.3, 0.6483],'10Mile':[10.0,0.6483 ],'20km':[12.4,0.6483 ],'H.Mar':[13.1, 0.6483],'25km':[15.5, 0.6441],'30km':[18.6,0.6457 ],'Marathon':[26.2,0.6376 ],'50km':[31.1, 0.6376],'50Mile':[50.0,0.6376 ], '100km':[62.1, 0.6376],'150km':[93.2,0.6376 ],'100Mile':[100.0, 0.6376 ],'200km':[124.2, 0.6376]},
-
-  '73':{ '5km':[3.1, 0.6703],'6km':[3.7, 0.6633],'4Mile':[4.0,0.6606 ],'8km':[5.0,0.6522 ],'5Mile':[5.0, 0.6519 ],'10km':[6.2, 0.6435],'12km':[7.5, 0.6435 ],'15km':[9.3, 0.6378],'10Mile':[10.0, 0.6378],'20km':[12.4, 0.6378],'H.Mar':[13.1,0.6378 ],'25km':[15.5, 0.6335],'30km':[18.6,0.6349 ],'Marathon':[26.2,0.6266 ],'50km':[31.1,0.6266 ],'50Mile':[50.0, 0.6266], '100km':[62.1,0.6266 ],'150km':[93.2, 0.6266],'100Mile':[100.0, 0.6266 ],'200km':[124.2,0.6266 ]},
-
-  '74':{ '5km':[3.1, 0.6606],'6km':[3.7, 0.6534],'4Mile':[4.0,0.6506 ],'8km':[5.0, 0.6419],'5Mile':[5.0,0.6417  ],'10km':[6.2,0.6330 ],'12km':[7.5,  ],'15km':[9.3, 0.6273],'10Mile':[10.0, 0.6273],'20km':[12.4, 0.6273],'H.Mar':[13.1,0.6273 ],'25km':[15.5, 0.6229],'30km':[18.6,0.6241, ],'Marathon':[26.2,0.6156 ],'50km':[31.1, 0.6156],'50Mile':[50.0,0.6156 ], '100km':[62.1, 0.6156],'150km':[93.2, 0.6156],'100Mile':[100.0,0.6156  ],'200km':[124.2, 0.6156]},
   
-
-  '75':{ '5km':[3.1,0.6509 ],'6km':[3.7,0.6435 ],'4Mile':[4.0, 0.6406],'8km':[5.0,0.6317 ],'5Mile':[5.0, 0.6314 ],'10km':[6.2,0.6225 ],'12km':[7.5, 0.6225 ],'15km':[9.3, 0.6168],'10Mile':[10.0,0.6168 ],'20km':[12.4, 0.6168],'H.Mar':[13.1, 0.6168],'25km':[15.5, 0.6123],'30km':[18.6,0.6133 ],'Marathon':[26.2, 0.6042],'50km':[31.1,0.6042 ],'50Mile':[50.0,0.6042 ], '100km':[62.1,0.6042 ],'150km':[93.2,0.6042 ],'100Mile':[100.0,0.6042  ],'200km':[124.2,0.6042]},
-
-  '76':{ '5km':[3.1,0.6412 ],'6km':[3.7, 0.6335],'4Mile':[4.0, 0.6306],'8km':[5.0,0.6214 ],'5Mile':[5.0, 0.6212 ],'10km':[6.2, 0.6120],'12km':[7.5, 0.6120 ],'15km':[9.3, 0.6063],'10Mile':[10.0, 0.6063],'20km':[12.4,0.6060 ],'H.Mar':[13.1,0.6059 ],'25km':[15.5, 0.6011],'30km':[18.6,0.6018 ],'Marathon':[26.2,0.5920 ],'50km':[31.1,0.5920 ],'50Mile':[50.0,0.5920 ], '100km':[62.1, 0.5920],'150km':[93.2,0.5920 ],'100Mile':[100.0, 0.5920 ],'200km':[124.2,0.5920 ]},
-
-  '77':{ '5km':[3.1,0.6315 ],'6km':[3.7, 0.6206],'4Mile':[4.0,0.6112 ],'8km':[5.0, 0.6109],'5Mile':[5.0, 0.6015 ],'10km':[6.2, 0.6015],'12km':[7.5,  0.6015],'15km':[9.3,0.5956 ],'10Mile':[10.0,0.5954 ],'20km':[12.4,0.5945 ],'H.Mar':[13.1,0.5942 ],'25km':[15.5, 0.5891, ],'30km':[18.6, 0.5894],'Marathon':[26.2,0.5790 ],'50km':[31.1,0.5790 ],'50Mile':[50.0,0.5790 ], '100km':[62.1, 0.5790],'150km':[93.2, 0.5790],'100Mile':[100.0,0.5790  ],'200km':[124.2,0.5790 ]},
   
-
-  '78':{ '5km':[3.1,0.6218 ],'6km':[3.7,0.6137 ],'4Mile':[4.0,0.6106 ],'8km':[5.0, 0.6009],'5Mile':[5.0, 0.6007 ],'10km':[6.2,0.5910 ],'12km':[7.5, 0.5908 ],'15km':[9.3, 0.5841],'10Mile':[10.0, 0.5837],'20km':[12.4,0.5823 ],'H.Mar':[13.1, 0.5818],'25km':[15.5,0.5764 ],'30km':[18.6, 0.5763],'Marathon':[26.2,0.5652, ],'50km':[31.1, 0.5652],'50Mile':[50.0,0.5652 ], '100km':[62.1, 0.5652],'150km':[93.2, 0.5652],'100Mile':[100.0,0.5652  ],'200km':[124.2, 0.5652]},
-
-
-  '79':{ '5km':[3.1, 0.6120],'6km':[3.7, 0.6036],'4Mile':[4.0, 0.6036],'8km':[5.0, 0.6004],'5Mile':[5.0,  0.5904],'10km':[6.2, 0.5901],'12km':[7.5,  0.5801],'15km':[9.3, 0.5792],'10Mile':[10.0, 0.5713],'20km':[12.4, 0.5692],'H.Mar':[13.1, 0.5687],'25km':[15.5, 0.5629],'30km':[18.6,0.5625 ],'Marathon':[26.2, 0.5506],'50km':[31.1,0.5506 ],'50Mile':[50.0, 0.5506], '100km':[62.1, 0.5506],'150km':[93.2, 0.5506],'100Mile':[100.0, 0.5506 ],'200km':[124.2,0.5506 ]},
-
-
-  '80':{ '5km':[3.1,0.6013 ],'6km':[3.7, 0.5926],'4Mile':[4.0,0.5893 ],'8km':[5.0,0.5788 ],'5Mile':[5.0,  0.5786],'10km':[6.2,0.5681 ],'12km':[7.5, 0.5667 ],'15km':[9.3, 0.5587],'10Mile':[10.0,0.5579 ],'20km':[12.4,0.5554 ],'H.Mar':[13.1,0.5548 ],'25km':[15.5,0.5486 ],'30km':[18.6, 0.5478],'Marathon':[26.2,0.5352 ],'50km':[31.1,0.5352 ],'50Mile':[50.0,0.5352 ], '100km':[62.1,0.5352 ],'150km':[93.2,0.5352 ],'100Mile':[100.0, 0.5352 ],'200km':[124.2,0.5352 ]},
-
-  '81':{ '5km':[3.1,0.5897 ],'6km':[3.7,0.5807 ],'4Mile':[4.0,0.5772 ],'8km':[5.0, 0.5664],'5Mile':[5.0,0.5661  ],'10km':[6.2,0.5553 ],'12km':[7.5, 0.5533 ],'15km':[9.3, 0.5447],'10Mile':[10.0, 0.5438],'20km':[12.4,0.5408 ],'H.Mar':[13.1,0.5401],'25km':[15.5,0.5335 ],'30km':[18.6,0.5323 ],'Marathon':[26.2,0.5190 ],'50km':[31.1,0.5190 ],'50Mile':[50.0,0.5190 ], '100km':[62.1, 0.5190],'150km':[93.2,0.5190 ],'100Mile':[100.0, 0.5190 ],'200km':[124.2,0.5190 ]},
-
-
-  '82':{ '5km':[3.1,0.5772 ],'6km':[3.7,0.5678 ],'4Mile':[4.0, 0.5642],'8km':[5.0,0.5530 ],'5Mile':[5.0,  0.5527],'10km':[6.2, 0.5415],'12km':[7.5, 0.5390 ],'15km':[9.3,0.5299 ],'10Mile':[10.0,0.5288 ],'20km':[12.4, 0.5255, ],'H.Mar':[13.1, 0.5246],'25km':[15.5,0.5177 ],'30km':[18.6, 0.5161],'Marathon':[26.2, 0.5020],'50km':[31.1, 0.5020],'50Mile':[50.0,0.5020], '100km':[62.1,0.5020 ],'150km':[93.2,0.5020 ],'100Mile':[100.0, 0.5020 ],'200km':[124.2, 0.5020]},
-
-  '83':{ '5km':[3.1,0.5637 ],'6km':[3.7,0.5540 ],'4Mile':[4.0,0.5503 ],'8km':[5.0, 0.5387],'5Mile':[5.0,  ],'10km':[6.2, 0.5268],'12km':[7.5, 0.5238 ],'15km':[9.3, 0.5142],'10Mile':[10.0, 0.5130],'20km':[12.4,0.5093],'H.Mar':[13.1, 0.5084],'25km':[15.5,0.5011 ],'30km':[18.6, 0.4991],'Marathon':[26.2,0.4842 ],'50km':[31.1,0.4842 ],'50Mile':[50.0, 0.4842], '100km':[62.1, 0.4842],'150km':[93.2, 0.4842],'100Mile':[100.0, 0.4842 ],'200km':[124.2, 0.4842]},
-
-  '84':{ '5km':[3.1,0.5493 ],'6km':[3.7,0.5393],'4Mile':[4.0,0.5354 ],'8km':[5.0,0.5234 ],'5Mile':[5.0,0.5231],'10km':[6.2, 0.5111],'12km':[7.5,  0.5077],'15km':[9.3, 0.4977],'10Mile':[10.0, 0.4964],'20km':[12.4, 0.4924],'H.Mar':[13.1, 0.4915],'25km':[15.5, 0.4838],'30km':[18.6,0.4813 ],'Marathon':[26.2,0.4656 ],'50km':[31.1,0.4656 ],'50Mile':[50.0, 0.4656], '100km':[62.1,0.4656 ],'150km':[93.2, 0.4656],'100Mile':[100.0,  0.4656],'200km':[124.2,0.4656 ]},
+    //--------------------------------Calculate Button------------------------------------------
   
-
-  '85':{ '5km':[3.1,0.5340 ],'6km':[3.7, 0.5236],'4Mile':[4.0, 0.5196],'8km':[5.0,0.5072 ],'5Mile':[5.0, 0.5069 ],'10km':[6.2, 0.4945],'12km':[7.5, 0.4907 ],'15km':[9.3,0.4804 ],'10Mile':[10.0, 0.4790],'20km':[12.4,0.4747 ],'H.Mar':[13.1, 0.4738],'25km':[15.5,0.4657],'30km':[18.6, 0.4628],'Marathon':[26.2,0.4462 ],'50km':[31.1, 0.4462],'50Mile':[50.0, 0.4462], '100km':[62.1,0.4462 ],'150km':[93.2, 0.4462],'100Mile':[100.0, 0.4462 ],'200km':[124.2, 0.4260]},
-
-  '86':{ '5km':[3.1,0.5177 ],'6km':[3.7, 0.5070],'4Mile':[4.0,0.5029 ],'8km':[5.0, 0.4901],'5Mile':[5.0, 0.4897 ],'10km':[6.2, 0.4769],'12km':[7.5, 0.4729 ],'15km':[9.3, 0.4622],'10Mile':[10.0,0.4607 ],'20km':[12.4,0.4563 ],'H.Mar':[13.1,0.4553 ],'25km':[15.5,0.4468 ],'30km':[18.6,0.4434 ],'Marathon':[26.2, 0.4260],'50km':[31.1, 0.4260],'50Mile':[50.0,0.4260 ], '100km':[62.1,0.4260 ],'150km':[93.2,0.4260 ],'100Mile':[100.0,  0.4260],'200km':[124.2, 0.4260]},
-
-  '87':{ '5km':[3.1, 0.5004],'6km':[3.7,0.4894 ],'4Mile':[4.0,0.4852 ],'8km':[5.0, 0.4720],'5Mile':[5.0, 0.4716 ],'10km':[6.2, 0.4585],'12km':[7.5,0.4541  ],'15km':[9.3,0.4432 ],'10Mile':[10.0, 0.4416],'20km':[12.4,0.4371 ],'H.Mar':[13.1,0.4360 ],'25km':[15.5,0.4271 ],'30km':[18.6, 0.4233],'Marathon':[26.2,0.4050 ],'50km':[31.1, 0.4050],'50Mile':[50.0, 0.4050], '100km':[62.1,0.4050 ],'150km':[93.2,0.4050 ],'100Mile':[100.0,0.4050  ],'200km':[124.2,0.4050 ]},
   
-
-  '88':{ '5km':[3.1,0.4823 ],'6km':[3.7,0.4709 ],'4Mile':[4.0, 0.4665],'8km':[5.0,0.4530 ],'5Mile':[5.0,  0.4526],'10km':[6.2, 0.4390],'12km':[7.5, 0.4344 ],'15km':[9.3, 0.4233],'10Mile':[10.0, 0.4217],'20km':[12.4, 0.4171],'H.Mar':[13.1,0.4160 ],'25km':[15.5,0.4067 ],'30km':[18.6, 0.4024],'Marathon':[26.2, 0.3832],'50km':[31.1,0.3832 ],'50Mile':[50.0, 0.3832], '100km':[62.1,0.3832 ],'150km':[93.2, 0.3832],'100Mile':[100.0,0.3832  ],'200km':[124.2,0.3832 ]},
-
-
-  '89':{ '5km':[3.1, 0.4632],'6km':[3.7,0.4515 ],'4Mile':[4.0, 0.4470],'8km':[5.0,0.4330 ],'5Mile':[5.0, 0.4326 ],'10km':[6.2, 0.4187],'12km':[7.5, 0.4139,  ],'15km':[9.3,0.4026 ],'10Mile':[10.0,0.4010 ],'20km':[12.4, 0.3963],'H.Mar':[13.1,0.3953 ],'25km':[15.5, 0.3855],'30km':[18.6, 0.3807, ],'Marathon':[26.2,0.3606 ],'50km':[31.1, 0.3606],'50Mile':[50.0,0.3606 ], '100km':[62.1, 0.3606],'150km':[93.2, 0.3606],'100Mile':[100.0,0.3606  ],'200km':[124.2,0.3606 ]},
-
-
-  '90':{ '5km':[3.1,0.4431 ],'6km':[3.7,0.4311 ],'4Mile':[4.0,0.4265 ],'8km':[5.0, 0.4121],'5Mile':[5.0,  0.4117],'10km':[6.2,0.3973 ],'12km':[7.5,0.3924  ],'15km':[9.3, 0.3810],'10Mile':[10.0,0.3794 ],'20km':[12.4,0.3748 ],'H.Mar':[13.1, 0.3738],'25km':[15.5, 0.3635],'30km':[18.6,0.3583 ],'Marathon':[26.2, 0.3372],'50km':[31.1,0.3372 ],'50Mile':[50.0,0.3372 ], '100km':[62.1,0.3372 ],'150km':[93.2,0.3372 ],'100Mile':[100.0, 0.3372 ],'200km':[124.2, ]},
-
-
-
-  '91':{ '5km':[3.1,0.4221 ],'6km':[3.7,0.4098 ],'4Mile':[4.0, 0.4050],'8km':[5.0, 0.3903],'5Mile':[5.0,0.3899  ],'10km':[6.2, 0.3751],'12km':[7.5, 0.3700 ],'15km':[9.3, 0.3586],'10Mile':[10.0,0.3570 ],'20km':[12.4,0.3525 ],'H.Mar':[13.1,0.3515 ],'25km':[15.5, 0.3407],'30km':[18.6,0.3350 ],'Marathon':[26.2,0.3130 ],'50km':[31.1, 0.3130],'50Mile':[50.0,0.3130 ], '100km':[62.1,0.3130 ],'150km':[93.2, 0.3130],'100Mile':[100.0, 0.3130 ],'200km':[124.2, 0.3130]},
+  // AG TABLES SCRIPT--------------------------------------
+  // Male--------------------Male---------Male-------Male---//
   
-  '92':{ '5km':[3.1, 0.4002 ],'6km':[3.7,0.3875 ],'4Mile':[4.0,0.3826 ],'8km':[5.0, 0.3675],'5Mile':[5.0,  0.3671],'10km':[6.2,0.3519 ],'12km':[7.5,0.3468  ],'15km':[9.3, 0.3354],'10Mile':[10.0, 0.3338],'20km':[12.4,0.3294, ],'H.Mar':[13.1,0.3284, ],'25km':[15.5,0.3172 ],'30km':[18.6, 0.3110],'Marathon':[26.2, 0.2880],'50km':[31.1, 0.2880],'50Mile':[50.0, 0.2880], '100km':[62.1, 0.2880],'150km':[93.2,0.2880 ],'100Mile':[100.0,  0.2880],'200km':[124.2,0.2880]},
-
-
-  '93':{ '5km':[3.1,0.3773 ],'6km':[3.7, 0.3593],'4Mile':[4.0, 0.3438],'8km':[5.0, 0.3433],'5Mile':[5.0,0.3278  ],'10km':[6.2, 0.3226],'12km':[7.5, 0.3226 ],'15km':[9.3, 0.3113],'10Mile':[10.0, 0.3097],'20km':[12.4,0.3055 ],'H.Mar':[13.1,0.3046 ],'25km':[15.5, 0.2930],'30km':[18.6, 0.2862],'Marathon':[26.2, 0.2622, ],'50km':[31.1,0.2622 ],'50Mile':[50.0, 0.2622], '100km':[62.1, 0.2622],'150km':[93.2, 0.2622],'100Mile':[100.0,  0.2622],'200km':[124.2,0.2622 ]},
-
-
-
-  '94':{ '5km':[3.1,0.3535 ],'6km':[3.7, 0.3350],'4Mile':[4.0, 0.3191],'8km':[5.0,0.3187 ],'5Mile':[5.0, 0.3027 ],'10km':[6.2,0.3027 ],'12km':[7.5,0.2976  ],'15km':[9.3, 0.2864],'10Mile':[10.0,0.2849 ],'20km':[12.4, 0.2809],'H.Mar':[13.1, 0.2801],'25km':[15.5,0.2679 ],'30km':[18.6, 0.2606],'Marathon':[26.2,0.2356 ],'50km':[31.1,0.2356 ],'50Mile':[50.0, 0.2356], '100km':[62.1, 0.2356],'150km':[93.2,0.2356 ],'100Mile':[100.0,0.2356  ],'200km':[124.2,0.2356 ]},
+  // 6km..not converted to miles
+  var mens = {
+    OC: { '5km': [3.1, 779], '6km': [3.7, 942], '4Mile': [4.0, 1014], '8km': [5.0, 1272], '5Mile': [5.0, 1279], '10km': [6.2, 1603], '12km': [7.5, 1942], '15km': [9.3, 2455], '10Mile': [10.0, 2640], '20km': [12.4, 3315], 'H.Mar': [13.1, 3503], '25km': [15.5, 4205], '30km': [18.6, 5110], 'Marathon': [26.2, 7377], '50km': [31.1, 8970], '50Mile': [50.0, 16080], '100km': [62.1, 21360], '150km': [93.2, 36300], '100Mile': [100.0, 39850], '200km': [124.2, 52800] },
   
-
-  '95':{ '5km':[3.1,0.3288 ],'6km':[3.7, 0.3151],'4Mile':[4.0, 0.3098],'8km':[5.0,0.2935 ],'5Mile':[5.0,  0.2930],'10km':[6.2,0.2767 ],'12km':[7.5,0.2716  ],'15km':[9.3,0.2606 ],'10Mile':[10.0, 0.2592],'20km':[12.4,0.2555 ],'H.Mar':[13.1, 0.2548],'25km':[15.5, 0.2421],'30km':[18.6, 0.2342],'Marathon':[26.2,0.2082 ],'50km':[31.1,0.2082 ],'50Mile':[50.0, 0.2082], '100km':[62.1,0.2082 ],'150km':[93.2, 0.2082],'100Mile':[100.0, 0.2082 ],'200km':[124.2,0.2082 ]},
-
-  '96':{ '5km':[3.1, 0.3031],'6km':[3.7, 0.2891],'4Mile':[4.0, 0.2837],'8km':[5.0,0.2669 ],'5Mile':[5.0,  0.2665],'10km':[6.2,0.2497 ],'12km':[7.5, 0.2448 ],'15km':[9.3, 0.2340],'10Mile':[10.0, 0.2326],'20km':[12.4, 0.2293],'H.Mar':[13.1,0.2287 ],'25km':[15.5,0.2155 ],'30km':[18.6,0.2071 ],'Marathon':[26.2,0.1800],'50km':[31.1,0.1800 ],'50Mile':[50.0,0.1800 ], '100km':[62.1,0.1800 ],'150km':[93.2, 0.1800],'100Mile':[100.0,0.1800  ],'200km':[124.2,0.1800 ]},
-
-  '97':{ '5km':[3.1, 0.2764],'6km':[3.7,0.2621 ],'4Mile':[4.0,0.2566 ],'8km':[5.0, 0.2395],'5Mile':[5.0, 0.2390 ],'10km':[6.2,0.2219 ],'12km':[7.5, 0.2171 ],'15km':[9.3, 0.2065],'10Mile':[10.0, 0.2053],'20km':[12.4,0.2023 ],'H.Mar':[13.1, 0.2018],'25km':[15.5,0.1881 ],'30km':[18.6,0.1792 ],'Marathon':[26.2,0.1510 ],'50km':[31.1,0.1510 ],'50Mile':[50.0,0.1510 ], '100km':[62.1,0.1510 ],'150km':[93.2, 0.1510],'100Mile':[100.0,0.1510  ],'200km':[124.2, 0.1510]},
+    '5': { '5km': [3.1, 0.6062], '6km': [3.7, 0.6056], '4Mile': [4.0, 0.6056], '8km': [5.0, 0.6056], '5Mile': [5.0, 0.6056], '10km': [6.2, 0.6056], '12km': [7.5, 0.6056], '15km': [9.3, 0.6056], '10Mile': [10.0, 0.6056], '20km': [12.4, 0.6056], 'H.Mar': [13.1, 0.6056], '25km': [15.5, 0.6056], '30km': [18.6, 0.6056], 'Marathon': [26.2, 0.6056], '50km': [31.1, 0.6056], '50Mile': [50.0, 0.6056], '100km': [62.1, 0.6056], '150km': [93.2, 0.6056], '100Mile': [100.0, 0.6056], '200km': [124.2, 0.6056] },
   
-  '98':{ '5km':[3.1,0.2489 ],'6km':[3.7,0.2342 ],'4Mile':[4.0, 0.2285],'8km':[5.0,0.2110 ],'5Mile':[5.0,  0.2106],'10km':[6.2,0.1930 ],'12km':[7.5, 0.1884 ],'15km':[9.3, 0.1782],'10Mile':[10.0, ],'20km':[12.4, 0.1746],'H.Mar':[13.1,0.1742 ],'25km':[15.5,0.1600 ],'30km':[18.6, 0.1504],'Marathon':[26.2,0.1212 ],'50km':[31.1, 0.1212],'50Mile':[50.0,0.1212 ], '100km':[62.1,0.1212 ],'150km':[93.2,0.1212 ],'100Mile':[100.0,  0.1212],'200km':[124.2, 0.1212]},
-
-
-  '99':{ '5km':[3.1, 0.2204],'6km':[3.7, 0.2054],'4Mile':[4.0,0.1996 ],'8km':[5.0,0.1817 ],'5Mile':[5.0, 0.1812 ],'10km':[6.2, 0.1633],'12km':[7.5,0.1589  ],'15km':[9.3, 0.1491],'10Mile':[10.0,0.1481 ],'20km':[12.4,0.1461 ],'H.Mar':[13.1,0.1459 ],'25km':[15.5, 0.1311],'30km':[18.6, 0.1210],'Marathon':[26.2,0.0906 ],'50km':[31.1,0.0906 ],'50Mile':[50.0, 0.0906], '100km':[62.1, 0.0906],'150km':[93.2,0.0906 ],'100Mile':[100.0,0.0906  ],'200km':[124.2,0.0906 ]},
-
-  '100':{ '5km':[3.1,0.1909 ],'6km':[3.7, 0.1756],'4Mile':[4.0,0.1697 ],'8km':[5.0, 0.1514],'5Mile':[5.0, 0.1509 ],'10km':[6.2,0.1325 ],'12km':[7.5,0.1285  ],'15km':[9.3,0.1191 ],'10Mile':[10.0,0.1183 ],'20km':[12.4, 0.1169],'H.Mar':[13.1, 0.1168],'25km':[15.5, 0.1014],'30km':[18.6,0.0907 ],'Marathon':[26.2, 0.0592],'50km':[31.1, 0.0592],'50Mile':[50.0, 0.0592], '100km':[62.1, 0.0592],'150km':[93.2, 0.0592],'100Mile':[100.0, 0.0592 ],'200km':[124.2, 0.0592]},
-
-
-
-};
-
-// ----------Functions----------------------------------------------------------------
-
-// var gender; // gender male/female from user input
-// var ages = new Array(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100);
-var pAGP; // AG% of past race time, calculated/ assinged to function AGCalc
-var gender;
-// var womens = {
-//   OC:{'5km': [3.1, 886]},
-//   '50': {'5km':[3.1, 0.8937],	
-//   '6km':[6, 0.8914]},
-//   '60': {'5km':[5, 0.77], 
-//   '6km' :[6, .777]}
-// };
-//console.log("world record time: " + womens.OC['5km'][1]); //this now returns 886 🙌
-function AGCalc (gender, age, distance, ageRunTime, globals) {
-age = parseFloat(age), ageRunTime = parseFloat(ageRunTime);
-if (gender === 'm'){
-  var offset = mens[age][distance][1];
-  var AGadj = (mens['OC'][distance][1])/offset;
-  globals = AGadj/ageRunTime;
-}
-if (gender === 'f'){
-  var offset = womens[age][distance][1];
-  var AGadj = (womens['OC'][distance][1])/offset;
-  globals = AGadj/ageRunTime;
-}
- return globals;
- 
-}
-console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
- AGCalc('f', 50, '5km', 2000);
-
-
-
-
-
-
-  // End of Document.ready
-});
+    '6': { '5km': [3.1,0.6602], '6km': [3.7,0.6596], '4Mile': [4.0,0.6596], '8km': [5.0,0.6596], '5Mile': [5.0,0.6596], '10km': [6.2,0.6596], '12km': [7.5,0.6596], '15km': [9.3,0.6596], '10Mile': [10.0,0.6596], '20km': [12.4,0.6596], 'H.Mar': [13.1,0.6596], '25km': [15.5,0.6596], '30km': [18.6,0.6596], 'Marathon': [26.2,0.6596], '50km': [31.1,0.6596], '50Mile': [50.0,0.6596], '100km': [62.1,0.6596], '150km': [93.2,0.6596], '100Mile': [100.0,0.6596], '200km': [124.2,0.6596] },
+  
+    '7': { '5km': [3.1,0.7102], '6km': [3.7,0.7096], '4Mile': [4.0,0.7096], '8km': [5.0,0.7096], '5Mile': [5.0,0.7096], '10km': [6.2,0.7096], '12km': [7.5,0.7096], '15km': [9.3,0.7096], '10Mile': [10.0,0.7096], '20km': [12.4,0.7096], 'H.Mar': [13.1,0.7096], '25km': [15.5,0.7096], '30km': [18.6,0.7096], 'Marathon': [26.2,0.7096], '50km': [31.1,0.7096], '50Mile': [50.0,0.7096], '100km': [62.1,0.7096], '150km': [93.2,0.7096], '100Mile': [100.0,0.7096], '200km': [124.2,0.7096]},
+  
+    '8': { '5km': [3.1,0.7562], '6km': [3.7,0.7556], '4Mile': [4.0,0.7556], '8km': [5.0,0.7556], '5Mile': [5.0,0.7556], '10km': [6.2,0.7556], '12km': [7.5,0.7556], '15km': [9.3,0.7556], '10Mile': [10.0,0.7556], '20km': [12.4,0.7556], 'H.Mar': [13.1,0.7556], '25km': [15.5,0.7556], '30km': [18.6,0.7556], 'Marathon': [26.2,0.7556], '50km': [31.1,0.7556], '50Mile': [50.0,0.7556], '100km': [62.1,0.7556], '150km': [93.2,0.7556], '100Mile': [100.0,0.7556], '200km': [124.2,0.7556] },
+  
+    '9': { '5km': [3.1,0.7982], '6km': [3.7,0.7976], '4Mile': [4.0,0.7976], '8km': [5.0,0.7976], '5Mile': [5.0,0.7976], '10km': [6.2,0.7976], '12km': [7.5,0.7976], '15km': [9.3,0.7976], '10Mile': [10.0,0.7976], '20km': [12.4,0.7976], 'H.Mar': [13.1,0.7976], '25km': [15.5,0.7976], '30km': [18.6,0.7976], 'Marathon': [26.2,0.7976], '50km': [31.1,0.7976], '50Mile': [50.0,0.7976], '100km': [62.1,0.7976], '150km': [93.2,0.7976], '100Mile': [100.0,0.7976], '200km': [124.2,0.7976] },
+  
+    '10': { '5km': [3.1,0.8362], '6km': [3.7,0.8356], '4Mile': [4.0,0.8356], '8km': [5.0,0.8356], '5Mile': [5.0,0.8356], '10km': [6.2,0.8356], '12km': [7.5,0.8356], '15km': [9.3,0.8356], '10Mile': [10.0,0.8356], '20km': [12.4,0.8356], 'H.Mar': [13.1,0.8356], '25km': [15.5,0.8356], '30km': [18.6,0.8356], 'Marathon': [26.2,0.8356], '50km': [31.1,0.8356], '50Mile': [50.0,0.8356], '100km': [62.1,0.8356], '150km': [93.2,0.8356], '100Mile': [100.0,0.8356], '200km': [124.2,0.8356] },
+  
+    '11': { '5km': [3.1,0.8702], '6km': [3.7,0.8696], '4Mile': [4.0,0.8696], '8km': [5.0,0.8696], '5Mile': [5.0,0.8696], '10km': [6.2,0.8696], '12km': [7.5,0.8696], '15km': [9.3,0.8696], '10Mile': [10.0,0.8696], '20km': [12.4,0.8696], 'H.Mar': [13.1,0.8696], '25km': [15.5,0.8696], '30km': [18.6,0.8696], 'Marathon': [26.2,0.8696], '50km': [31.1,0.8696], '50Mile': [50.0,0.8696], '100km': [62.1,0.8696], '150km': [93.2,0.8696], '100Mile': [100.0,0.8696], '200km': [124.2,0.8696] },
+  
+    '12': { '5km': [3.1,0.9002], '6km': [3.7,0.8996], '4Mile': [4.0,0.8996], '8km': [5.0,0.8996], '5Mile': [5.0,0.8996], '10km': [6.2,0.8996], '12km': [7.5,0.8996], '15km': [9.3,0.8996], '10Mile': [10.0,0.8996], '20km': [12.4,0.8996], 'H.Mar': [13.1,0.8996], '25km': [15.5,0.8996], '30km': [18.6,0.8996], 'Marathon': [26.2,0.8996], '50km': [31.1,0.8996], '50Mile': [50.0,0.8996], '100km': [62.1,0.8996], '150km': [93.2,0.8996], '100Mile': [100.0,0.8996], '200km': [124.2,0.8996] },
+  
+    '13': { '5km': [3.1,0.9262], '6km': [3.7,0.9256], '4Mile': [4.0,0.9256], '8km': [5.0,0.9256], '5Mile': [5.0,0.9256], '10km': [6.2,0.9256], '12km': [7.5,0.9256], '15km': [9.3,0.9256], '10Mile': [10.0,0.9256], '20km': [12.4,0.9256], 'H.Mar': [13.1,0.9256], '25km': [15.5,0.9256], '30km': [18.6,0.9256], 'Marathon': [26.2,0.9256], '50km': [31.1,0.9256], '50Mile': [50.0,0.9256], '100km': [62.1,0.9256], '150km': [93.2,0.9256], '100Mile': [100.0,0.9256], '200km': [124.2,0.9256] },
+  
+    '14': { '5km': [3.1,0.9482], '6km': [3.7,0.9476], '4Mile': [4.0,0.9476], '8km': [5.0,0.9476], '5Mile': [5.0,0.9476], '10km': [6.2,0.9476], '12km': [7.5,0.9476], '15km': [9.3,0.9476], '10Mile': [10.0,0.9476], '20km': [12.4,0.9476], 'H.Mar': [13.1,0.9476], '25km': [15.5,0.9476], '30km': [18.6,0.9476], 'Marathon': [26.2,0.9476], '50km': [31.1,0.9476], '50Mile': [50.0,0.9476], '100km': [62.1,0.9476], '150km': [93.2,0.9476], '100Mile': [100.0,0.9476], '200km': [124.2,0.9476] },
+    
+  
+    '15': { '5km': [3.1,0.9662], '6km': [3.7,0.9656], '4Mile': [4.0,0.9656], '8km': [5.0,0.9656,], '5Mile': [5.0,0.9656], '10km': [6.2,0.9656], '12km': [7.5,0.9656], '15km': [9.3,0.9656], '10Mile': [10.0,0.9656], '20km': [12.4,0.9656], 'H.Mar': [13.1,0.9656], '25km': [15.5,0.9656], '30km': [18.6,0.9656], 'Marathon': [26.2,0.9656], '50km': [31.1,0.9656], '50Mile': [50.0,0.9656], '100km': [62.1,0.9656], '150km': [93.2,0.9656], '100Mile': [100.0,0.9656], '200km': [124.2,0.9656]},
+  
+    '16': { '5km': [3.1,0.9802], '6km': [3.7,0.9796], '4Mile': [4.0,0.9796], '8km': [5.0,0.9796], '5Mile': [5.0,0.9796], '10km': [6.2,0.9796], '12km': [7.5,0.9796], '15km': [9.3,0.9796], '10Mile': [10.0,0.9796], '20km': [12.4,0.9796], 'H.Mar': [13.1,0.9796], '25km': [15.5,0.9796], '30km': [18.6,0.9796], 'Marathon': [26.2,0.9796], '50km': [31.1,0.9796], '50Mile': [50.0,0.9796], '100km': [62.1,0.9796], '150km': [93.2,0.9796], '100Mile': [100.0,0.9796], '200km': [124.2,0.9796]},
+  
+    '17': { '5km': [3.1,0.9922], '6km': [3.7,0.9916], '4Mile': [4.0,0.9916], '8km': [5.0,0.9916], '5Mile': [5.0,0.9916], '10km': [6.2,0.9916], '12km': [7.5,0.9916], '15km': [9.3,0.9916], '10Mile': [10.0,0.9916], '20km': [12.4,0.9916], 'H.Mar': [13.1,0.9916], '25km': [15.5,0.9916], '30km': [18.6,0.9916], 'Marathon': [26.2,0.9916], '50km': [31.1,0.9916], '50Mile': [50.0,0.9916], '100km': [62.1,0.9916], '150km': [93.2,0.9916], '100Mile': [100.0,0.9916], '200km': [124.2,0.9916]},
+    
+  
+    '18': { '5km': [3.1,0.9996], '6km': [3.7,0.9993], '4Mile': [4.0,0.9993], '8km': [5.0,0.9993], '5Mile': [5.0,0.9993], '10km': [6.2,0.9993], '12km': [7.5,0.9993], '15km': [9.3,0.9993], '10Mile': [10.0,0.9993], '20km': [12.4,0.9993], 'H.Mar': [13.1,0.9993], '25km': [15.5,0.9993], '30km': [18.6,0.9993], 'Marathon': [26.2,0.9993], '50km': [31.1,0.9993], '50Mile': [50.0,0.9993], '100km': [62.1,0.9993], '150km': [93.2,0.9993], '100Mile': [100.0,0.9993], '200km': [124.2,0.9993] },
+  
+  
+    '19': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    
+  
+    '20': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    
+    '21': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+      
+    '23': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    
+    '24': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    
+    '25': { '5km': [3.1,1],'6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1]},
+    
+    
+    '26': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+    
+    
+    '27': { '5km': [3.1,1], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+    
+    
+    '28': { '5km': [3.1,0.9997], '6km': [3.7,1], '4Mile': [4.0,1], '8km': [5.0,1], '5Mile': [5.0,1], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+    
+    '29': { '5km': [3.1,0.9987], '6km': [3.7,0.9995], '4Mile': [4.0,0.9997], '8km': [5.0,1], '5Mile': [5.0,], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+  
+    '30': { '5km': [3.1,0.997], '6km': [3.7,0.9983], '4Mile': [4.0,0.9987], '8km': [5.0,0.9996], '5Mile': [5.0,0.9996], '10km': [6.2,1], '12km':[7.5,1], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '1': [100.0,1], '200km': [124.2,1]},
+  
+    '31': { '5km': [3.1,0.9947], '6km': [3.7,0.9965], '4Mile': [4.0,0.9971], '8km': [5.0,0.9986], '5Mile': [5.0,0.9986], '10km': [6.2,0.9996], '12km':[7.5,0.9998], '15km': [9.3,1], '10Mile': [10.0,1], '20km': [12.4,1], 'H.Mar': [13.1,1], '25km': [15.5,1], '30km': [18.6,1], 'Marathon': [26.2,1], '50km': [31.1,1], '50Mile': [50.0,1], '100km': [62.1,1], '150km': [93.2,1], '100Mile': [100.0,1], '200km': [124.2,1] },
+  
+    '32': { '5km': [3.1,0.9918], '6km': [3.7,0.994], '4Mile': [4.0,0.9948], '8km': [5.0,0.9968], '5Mile': [5.0,0.9969], '10km': [6.2,0.9984], '12km':[7.5,0.9989], '15km': [9.3,0.9994], '10Mile': [10.0,0.9995], '20km': [12.4,0.9998], 'H.Mar': [13.1,0.9998], '25km': [15.5,0.9998], '30km': [18.6,0.9998], 'Marathon': [26.2,0.9998], '50km': [31.1,0.9998], '50Mile': [50.0,0.9998], '100km': [62.1,0.9998], '150km': [93.2,0.9998], '100Mile': [100.0,0.9998], '200km': [124.2,0.9998]},
+  
+    '33': { '5km': [3.1,0.9882], '6km': [3.7,0.9908], '4Mile': [4.0,0.9918], '8km': [5.0,0.9944], '5Mile': [5.0,0.9944], '10km': [6.2,0.9966], '12km':[7.5,0.9973], '15km': [9.3,0.998], '10Mile': [10.0,0.9982], '20km': [12.4,0.9988], 'H.Mar': [13.1,0.9989], '25km': [15.5,0.9989], '30km': [18.6,0.9989], 'Marathon': [26.2,0.9989], '50km': [31.1,0.9989], '50Mile': [50.0,0.9989], '100km': [62.1,0.9989], '150km': [93.2,0.9989], '100Mile': [100.0,0.9989], '200km': [124.2,0.9989] },
+  
+    '34': { '5km': [3.1,0.9839], '6km': [3.7,0.987], '4Mile': [4.0,0.9881], '8km': [5.0,0.9913], '5Mile': [5.0,0.9913], '10km': [6.2,0.9941], '12km':[7.5,0.995], '15km': [9.3,0.996], '10Mile': [10.0,0.9963], '20km': [12.4,0.9972], 'H.Mar': [13.1,0.9973], '25km': [15.5,0.9973], '30km': [18.6,0.9973], 'Marathon': [26.2,0.9973], '50km': [31.1,0.9973], '50Mile': [50.0,0.9973], '100km': [62.1,0.9973], '150km': [93.2,0.9973], '100Mile': [100.0,0.9973], '200km': [124.2,0.9973] },
+    
+  
+    '35': { '5km': [3.1,0.979], '6km': [3.7,0.9824], '4Mile': [4.0,0.9837], '8km': [5.0,0.9874], '5Mile': [5.0,0.9875], '10km': [6.2,0.9908], '12km':[7.5,0.992], '15km': [9.3,0.9932], '10Mile': [10.0,0.9936], '20km': [12.4,0.9948], 'H.Mar': [13.1,0.995], '25km': [15.5,0.995], '30km': [18.6,0.995], 'Marathon': [26.2,0.995], '50km': [31.1,0.995], '50Mile': [50.0,0.995], '100km': [62.1,0.995], '150km': [93.2,0.995], '100Mile': [100.0,0.995], '200km': [124.2,0.995] },
+  
+    '36': { '5km': [3.1,0.9734], '6km': [3.7,0.9773], '4Mile': [4.0,0.9787], '8km': [5.0,0.9829], '5Mile': [5.0,0.983], '10km': [6.2,0.9869], '12km':[7.5,0.9882], '15km': [9.3,0.9898], '10Mile': [10.0,0.9902], '20km': [12.4,0.9916], 'H.Mar': [13.1,0.992], '25km': [15.5,0.992], '30km': [18.6,0.992], 'Marathon': [26.2,0.992], '50km': [31.1,0.992], '50Mile': [50.0,0.992], '100km': [62.1,0.992], '150km': [93.2,0.992], '100Mile': [100.0,0.992], '200km': [124.2,0.992] },
+  
+    '37': { '5km': [3.1,0.9672], '6km': [3.7,0.9714], '4Mile': [4.0,0.973], '8km': [5.0,0.9777], '5Mile': [5.0,0.9778], '10km': [6.2,0.9822], '12km':[7.5,0.9838], '15km': [9.3,0.9856], '10Mile': [10.0,0.9861], '20km': [12.4,0.9878], 'H.Mar': [13.1,0.9882], '25km': [15.5,0.9882], '30km': [18.6,0.9882], 'Marathon': [26.2,0.9882], '50km': [31.1,0.9882], '50Mile': [50.0,0.9882], '100km': [62.1,0.9882], '150km': [93.2,0.9882], '100Mile': [100.0,0.9882], '200km': [124.2,0.9882] },
+    
+  
+    '38': { '5km': [3.1,0.9605], '6km': [3.7,0.9649], '4Mile': [4.0,0.9666], '8km': [5.0,0.9719], '5Mile': [5.0,0.972], '10km': [6.2,0.9769], '12km':[7.5,0.9786], '15km': [9.3,0.9807], '10Mile': [10.0,0.9813], '20km': [12.4,0.9832], 'H.Mar': [13.1,0.9837], '25km': [15.5,0.9837], '30km': [18.6,0.9837], 'Marathon': [26.2,0.9837], '50km': [31.1,0.9837], '50Mile': [50.0,0.9837], '100km': [62.1,0.9837], '150km': [93.2,0.9837], '100Mile': [100.0,0.9837], '200km': [124.2,0.9837] },
+  
+  
+    '39': { '5km': [3.1,0.9538], '6km': [3.7,0.958], '4Mile': [4.0,0.9597], '8km': [5.0,0.9653], '5Mile': [5.0,0.9654], '10km': [6.2,0.9708], '12km':[7.5,0.9727], '15km': [9.3,0.975], '10Mile': [10.0,0.9758], '20km': [12.4,0.9779], 'H.Mar': [13.1,0.9784], '25km': [15.5,0.9784], '30km': [18.6,0.9784], 'Marathon': [26.2,0.9784], '50km': [31.1,0.9784], '50Mile': [50.0,0.9784], '100km': [62.1,0.9784], '150km': [93.2,0.9784], '100Mile': [100.0,0.9784], '200km': [124.2,0.9784] },
+  
+    '40': { '5km': [3.1,0.9471], '6km': [3.7,0.9511], '4Mile': [4.0,0.9527], '8km': [5.0,0.9581], '5Mile': [5.0,0.9582], '10km': [6.2,0.964], '12km':[7.5,0.9662], '15km': [9.3,0.9687], '10Mile': [10.0,0.9695], '20km': [12.4,0.9719], 'H.Mar': [13.1,0.9725], '25km': [15.5,0.9725], '30km': [18.6,0.9725], 'Marathon': [26.2,0.9725], '50km': [31.1,0.9725], '50Mile': [50.0,0.9725], '100km': [62.1,0.9725], '150km': [93.2,0.9725], '100Mile': [100.0,0.9725], '200km': [124.2,0.9725] },
+  
+    '41': { '5km': [3.1,0.9404], '6km': [3.7,0.9442], '4Mile': [4.0,0.9457], '8km': [5.0,0.9509], '5Mile': [5.0,0.951], '10km': [6.2,0.9556], '12km':[7.5,0.9589], '15km': [9.3,0.9616], '10Mile': [10.0,0.9625], '20km': [12.4,0.9651], 'H.Mar': [13.1,0.9658], '25km': [15.5,0.9658], '30km': [18.6,0.9658], 'Marathon': [26.2,0.9658], '50km': [31.1,0.9658], '50Mile': [50.0,0.9658], '100km': [62.1,0.9658], '150km': [93.2,0.9658], '100Mile': [100.0,0.9658], '200km': [124.2,0.9658] },
+  
+    '42': { '5km': [3.1,0.9337], '6km': [3.7,0.9373], '4Mile': [4.0,0.9378], '8km': [5.0,0.9436], '5Mile': [5.0,0.9438], '10km': [6.2,0.9491], '12km':[7.5,0.9513], '15km': [9.3,0.954], '10Mile': [10.0,0.9549], '20km': [12.4,0.9577], 'H.Mar': [13.1,0.9584], '25km': [15.5,0.9584], '30km': [18.6,0.9584], 'Marathon': [26.2,0.9584], '50km': [31.1,0.9584], '50Mile': [50.0,0.9584], '100km': [62.1,0.9584], '150km': [93.2,0.9584], '100Mile': [100.0,0.9584], '200km': [124.2,0.9584] },
+  
+    '43': { '5km': [3.1,0.927], '6km': [3.7,0.9304], '4Mile': [4.0,0.9318], '8km': [5.0,0.9364], '5Mile': [5.0,0.9365], '10km': [6.2,0.9417], '12km':[7.5,0.9438], '15km': [9.3,0.9464], '10Mile': [10.0,0.9472], '20km': [12.4,0.9499], 'H.Mar': [13.1,0.9506], '25km': [15.5,0.9506], '30km': [18.6,0.9506], 'Marathon': [26.2,0.9506], '50km': [31.1,0.9506], '50Mile': [50.0,0.9506], '100km': [62.1,0.9506], '150km': [93.2,0.9506], '100Mile': [100.0,0.9506], '200km': [124.2,0.9506] },
+  
+    '44': { '5km': [3.1,0.9203], '6km': [3.7,0.9235], '4Mile': [4.0,0.9248], '8km': [5.0,0.9292], '5Mile': [5.0,0.9293], '10km': [6.2,0.9342], '12km':[7.5,0.9362], '15km': [9.3,0.9387], '10Mile': [10.0,0.9396], '20km': [12.4,0.9422], 'H.Mar': [13.1,0.9428], '25km': [15.5,0.9428], '30km': [18.6,0.9428], 'Marathon': [26.2,0.9428], '50km': [31.1,0.9428], '50Mile': [50.0,0.9428], '100km': [62.1,0.9428], '150km': [93.2,0.9428], '100Mile': [100.0,0.9428], '200km': [124.2,0.9428] },
+    
+  
+    '45': { '5km': [3.1,0.9136], '6km': [3.7,0.9166], '4Mile': [4.0,0.9178], '8km': [5.0,0.922], '5Mile': [5.0,0.9221], '10km': [6.2,0.9267], '12km':[7.5,0.9287], '15km': [9.3,0.9311], '10Mile': [10.0,0.9472], '20km': [12.4,0.9499], 'H.Mar': [13.1,0.9506], '25km': [15.5,0.9506], '30km': [18.6,0.9506], 'Marathon': [26.2,0.9506], '50km': [31.1,0.9506], '50Mile': [50.0,0.9506], '100km': [62.1,0.9506], '150km': [93.2,0.9506], '100Mile': [100.0,0.9506], '200km': [124.2,0.9506] },
+  
+    '46': { '5km': [3.1,0.9069], '6km': [3.7,0.9096], '4Mile': [4.0,0.9108], '8km': [5.0,0.9147], '5Mile': [5.0,0.9148], '10km': [6.2,0.9192], '12km':[7.5,0.9211], '15km': [9.3,0.9235], '10Mile': [10.0,0.9242], '20km': [12.4,0.9266], 'H.Mar': [13.1,0.9273], '25km': [15.5,0.9273], '30km': [18.6,0.9273], 'Marathon': [26.2,0.9273], '50km': [31.1,0.9273], '50Mile': [50.0,0.9273], '100km': [62.1,0.9273], '150km': [93.2,0.9273], '100Mile': [100.0,0.9273], '200km': [124.2,0.9273] },
+  
+    '47': { '5km': [3.1,0.9002], '6km': [3.7,0.9027], '4Mile': [4.0,0.9038], '8km': [5.0,0.9075], '5Mile': [5.0,0.9076], '10km': [6.2,0.9117], '12km':[7.5,0.9136], '15km': [9.3,0.9158], '10Mile': [10.0,], '20km': [12.4,], 'H.Mar': [13.1,], '25km': [15.5,], '30km': [18.6,], 'Marathon': [26.2,], '50km': [31.1,], '50Mile': [50.0,], '100km': [62.1,], '150km': [93.2,], '100Mile': [100.0,], '200km': [124.2,]},
+    
+  
+    '48': { '5km': [3.1,0.8935], '6km': [3.7,0.9858], '4Mile': [4.0,0.8968], '8km': [5.0,0.9003], '5Mile': [5.0,0.9004], '10km': [6.2,0.9043], '12km':[7.5,0.906], '15km': [9.3,0.9082], '10Mile': [10.0,0.9166], '20km': [12.4,0.9189], 'H.Mar': [13.1,0.9195], '25km': [15.5,0.9195], '30km': [18.6,0.9195], 'Marathon': [26.2,0.9195], '50km': [31.1,0.9195], '50Mile': [50.0,0.9195], '100km': [62.1,0.9195], '150km': [93.2,0.9195], '100Mile': [100.0,0.9195], '200km': [124.2,0.9195] },
+  
+  
+    '49': { '5km': [3.1,0.8868], '6km': [3.7,0.8889], '4Mile': [4.0,0.8899], '8km': [5.0,0.893], '5Mile': [5.0,0.8931], '10km': [6.2,0.8968], '12km':[7.5,0.8984], '15km': [9.3,0.9005], '10Mile': [10.0,0.9012], '20km': [12.4,0.9034], 'H.Mar': [13.1,0.9039], '25km': [15.5,0.9039], '30km': [18.6,0.9039], 'Marathon': [26.2,0.9039], '50km': [31.1,0.9039], '50Mile': [50.0,0.9039], '100km': [62.1,0.9039], '150km': [93.2,0.9039], '100Mile': [100.0,0.9039], '200km': [124.2,0.9039] },
+  
+    '50':{ '5km':[3.1, 0.8801],'6km':[3.7, 0.882],'4Mile':[4.0,0.8829 ],'8km':[5.0,0.8858 ],'5Mile':[5.0,0.8859  ],'10km':[6.2,0.8893 ],'12km':[7.5,0.8909 ],'15km':[9.3,0.8929],'10Mile':[10.0,0.8935 ],'20km':[12.4,0.8956 ],'H.Mar':[13.1,0.8961 ],'25km':[15.5,0.8961 ],'30km':[18.6,0.8961 ],'Marathon':[26.2,0.8961 ],'50km':[31.1,0.8961 ],'50Mile':[50.0,0.8961 ], '100km':[62.1,0.8961 ],'150km':[93.2,0.8961 ],'100Mile':[100.0,0.8961  ],'200km':[124.2,0.8961 ]},
+  
+    '51':{ '5km':[3.1,0.8734 ],'6km':[3.7,0.8751 ],'4Mile':[4.0,0.8759 ],'8km':[5.0,0.8786 ],'5Mile':[5.0,0.8787  ],'10km':[6.2,0.8818 ],'12km':[7.5,0.8833 ],'15km':[9.3,0.8852],'10Mile':[10.0,0.8859 ],'20km':[12.4,0.8878 ],'H.Mar':[13.1,0.8884 ],'25km':[15.5,0.8884 ],'30km':[18.6,0.8884 ],'Marathon':[26.2,0.8884 ],'50km':[31.1,0.8884 ],'50Mile':[50.0,0.8884 ], '100km':[62.1,0.8884 ],'150km':[93.2,0.8884 ],'100Mile':[100.0,0.8884  ],'200km':[124.2,0.8884 ]},
+  
+    '52':{ '5km':[3.1, 0.8667],'6km':[3.7,0.8682 ],'4Mile':[4.0,0.8689 ],'8km':[5.0,0.8714 ],'5Mile':[5.0,0.8714  ],'10km':[6.2,0.8743 ],'12km':[7.5,0.8758 ],'15km':[9.3,0.8776],'10Mile':[10.0,0.8782],'20km':[12.4,0.8801 ],'H.Mar':[13.1,0.8806 ],'25km':[15.5,0.8806 ],'30km':[18.6,0.8806 ],'Marathon':[26.2,0.8806 ],'50km':[31.1,0.8806 ],'50Mile':[50.0,0.8806 ], '100km':[62.1,0.8806 ],'150km':[93.2,0.8806 ],'100Mile':[100.0,0.8806  ],'200km':[124.2,0.8806 ] },
+  
+    '53':{ '5km':[3.1,0.86 ],'6km':[3.7,0.8613 ],'4Mile':[4.0,0.8619 ],'8km':[5.0,0.8641 ],'5Mile':[5.0,0.8642  ],'10km':[6.2,0.8669 ],'12km':[7.5,0.8682 ],'15km':[9.3,0.87],'10Mile':[10.0,0.8705 ],'20km':[12.4,0.8646 ],'H.Mar':[13.1,0.8646 ],'25km':[15.5,0.8646 ],'30km':[18.6,0.8646 ],'Marathon':[26.2,0.8646],'50km':[31.1,0.8646],'50Mile':[50.0,0.8646 ], '100km':[62.1,0.8646 ],'150km':[93.2, 0.8646],'100Mile':[100.0, 0.8646 ],'200km':[124.2, 0.8646]},
+  
+    '54':{ '5km':[3.1,0.8533],'6km':[3.7,0.8544 ],'4Mile':[4.0,0.8549 ],'8km':[5.0,0.8569 ],'5Mile':[5.0,0.8569  ],'10km':[6.2,0.8594 ],'12km':[7.5,0.8607 ],'15km':[9.3,0.8623],'10Mile':[10.0,0.8629 ],'20km':[12.4, 0.8646],'H.Mar':[13.1,0.865 ],'25km':[15.5,0.865 ],'30km':[18.6, 0.865],'Marathon':[26.2,0.865 ],'50km':[31.1, 0.865],'50Mile':[50.0, 0.865], '100km':[62.1,0.865 ],'150km':[93.2,0.865 ],'100Mile':[100.0, 0.865 ],'200km':[124.2,0.865 ]},
+    
+  
+    '55':{ '5km':[3.1,0.8466 ],'6km':[3.7,0.8475 ],'4Mile':[4.0,0.8479 ],'8km':[5.0,0.8497 ],'5Mile':[5.0,0.8497 ],'10km':[6.2,0.8519 ],'12km':[7.5,0.8531 ],'15km':[9.3,0.8547],'10Mile':[10.0,0.8552 ],'20km':[12.4,0.8568 ],'H.Mar':[13.1,0.8568],'25km':[15.5, 0.8568],'30km':[18.6,0.8568],'Marathon':[26.2, 0.8568],'50km':[31.1,0.8568 ],'50Mile':[50.0,0.8568 ], '100km':[62.1,0.8568 ],'150km':[93.2,0.8568 ],'100Mile':[100.0,0.8568  ],'200km':[124.2,0.8568 ]},
+  
+    '56':{ '5km':[3.1,0.8399 ],'6km':[3.7,0.8406 ],'4Mile':[4.0,0.841 ],'8km':[5.0,0.8424 ],'5Mile':[5.0, 0.8425 ],'10km':[6.2,0.8444 ],'12km':[7.5,0.8456 ],'15km':[9.3,0.847],'10Mile':[10.0,0.8475 ],'20km':[12.4,0.849 ],'H.Mar':[13.1, 0.8495],'25km':[15.5, 0.8495],'30km':[18.6, 0.8495],'Marathon':[26.2, 0.8495],'50km':[31.1,0.8495 ],'50Mile':[50.0,0.8495 ], '100km':[62.1, 0.8495],'150km':[93.2,0.8495 ],'100Mile':[100.0,0.8495  ],'200km':[124.2, 0.8495]},
+  
+    '57':{ '5km':[3.1,0.8332 ],'6km':[3.7,0.8337 ],'4Mile':[4.0,0.834 ],'8km':[5.0,0.8352 ],'5Mile':[5.0,0.8352  ],'10km':[6.2,0.8369 ],'12km':[7.5,0.838 ],'15km':[9.3,0.8394],'10Mile':[10.0,0.8399 ],'20km':[12.4,0.8495 ],'H.Mar':[13.1, 0.8417],'25km':[15.5, 0.8417],'30km':[18.6,0.8417 ],'Marathon':[26.2, 0.8417],'50km':[31.1,0.8417 ],'50Mile':[50.0,0.8417 ], '100km':[62.1, 0.8417],'150km':[93.2,0.8417],'100Mile':[100.0, 0.8417 ],'200km':[124.2, 0.8417]},
+    
+  
+    '58':{ '5km':[3.1,0.8265 ],'6km':[3.7,0.8268 ],'4Mile':[4.0,0.827 ],'8km':[5.0,0.828 ],'5Mile':[5.0,0.828  ],'10km':[6.2,0.8295 ],'12km':[7.5,0.8305 ],'15km':[9.3,0.8317],'10Mile':[10.0,0.8322 ],'20km':[12.4, 0.8335],'H.Mar':[13.1,0.8339 ],'25km':[15.5, 0.8339],'30km':[18.6, 0.8339],'Marathon':[26.2, ],'50km':[31.1,0.8339 ],'50Mile':[50.0,0.8339 ], '100km':[62.1, 0.8339],'150km':[93.2, 0.8339],'100Mile':[100.0, 0.8339 ],'200km':[124.2,0.8339 ]},
+  
+  
+    '59':{ '5km':[3.1,0.8198 ],'6km':[3.7,0.8199 ],'4Mile':[4.0,0.82 ],'8km':[5.0,0.8208 ],'5Mile':[5.0,0.8208  ],'10km':[6.2,0.822 ],'12km':[7.5,0.8229 ],'15km':[9.3,0.8241],'10Mile':[10.0,0.8245 ],'20km':[12.4,0.8258 ],'H.Mar':[13.1, 0.8261],'25km':[15.5,0.8261 ],'30km':[18.6,0.8261 ],'Marathon':[26.2,0.8261 ],'50km':[31.1, 0.8261],'50Mile':[50.0,0.8261 ], '100km':[62.1,0.8261 ],'150km':[93.2,0.8261 ],'100Mile':[100.0,  0.8261],'200km':[124.2, 0.8261]},
+  
+    '60':{ '5km':[3.1,0.8131],'6km':[3.7,0.813 ],'4Mile':[4.0,0.813 ],'8km':[5.0,0.8135 ],'5Mile':[5.0,0.8135  ],'10km':[6.2,0.8145 ],'12km':[7.5,0.8154 ],'15km':[9.3,0.8165],'10Mile':[10.0,0.8168 ],'20km':[12.4,0.818 ],'H.Mar':[13.1,0.8183 ],'25km':[15.5, 0.8183],'30km':[18.6, 0.8183],'Marathon':[26.2, 0.8183],'50km':[31.1, 0.8183],'50Mile':[50.0,0.8183 ], '100km':[62.1,0.8183 ],'150km':[93.2,0.8183 ],'100Mile':[100.0, 0.8183 ],'200km':[124.2, 0.8183]},
+  
+    '61':{ '5km':[3.1,0.8064],'6km':[3.7,0.8061 ],'4Mile':[4.0,0.806 ],'8km':[5.0,0.8063 ],'5Mile':[5.0, 0.8063 ],'10km':[6.2,0.807 ],'12km':[7.5,0.8078 ],'15km':[9.3,0.8088],'10Mile':[10.0,0.8092 ],'20km':[12.4,0.8103 ],'H.Mar':[13.1, 0.8106],'25km':[15.5,0.8106 ],'30km':[18.6,0.8106 ],'Marathon':[26.2, 0.8106],'50km':[31.1,0.8106 ],'50Mile':[50.0, 0.8106], '100km':[62.1,0.8106],'150km':[93.2,0.8106],'100Mile':[100.0, 0.8106 ],'200km':[124.2, 0.8106]},
+  
+    '62':{ '5km':[3.1,0.7997 ],'6km':[3.7,0.7992 ],'4Mile':[4.0,0.7991 ],'8km':[5.0,0.7991 ],'5Mile':[5.0,0.7991  ],'10km':[6.2,0.7995 ],'12km':[7.5,0.8003 ],'15km':[9.3,0.8012],'10Mile':[10.0,0.8015 ],'20km':[12.4, 0.8025],'H.Mar':[13.1,0.8028 ],'25km':[15.5,0.8028 ],'30km':[18.6, 0.8028],'Marathon':[26.2, 0.8028],'50km':[31.1, 0.8028],'50Mile':[50.0,0.8028 ], '100km':[62.1,0.8028 ],'150km':[93.2,0.8028 ],'100Mile':[100.0, 0.8028 ],'200km':[124.2, 0.8028]},
+  
+    '63':{ '5km':[3.1,0.793 ],'6km':[3.7,0.7923 ],'4Mile':[4.0,0.7921 ],'8km':[5.0,0.7918 ],'5Mile':[5.0,0.7918  ],'10km':[6.2,0.7921 ],'12km':[7.5,0.7927 ],'15km':[9.3,0.7935],'10Mile':[10.0,0.7938 ],'20km':[12.4, ],'H.Mar':[13.1, ],'25km':[15.5, ],'30km':[18.6, ],'Marathon':[26.2, ],'50km':[31.1, ],'50Mile':[50.0, ], '100km':[62.1, ],'150km':[93.2, ],'100Mile':[100.0,  ],'200km':[124.2, ]},
+  
+    '64':{ '5km':[3.1, 0.7863],'6km':[3.7,0.7854 ],'4Mile':[4.0,0.7851 ],'8km':[5.0,0.7846 ],'5Mile':[50, 0.7846,  ],'10km':[6.2,0.7846 ],'12km':[7.5,0.7852 ],'15km':[9.3,0.7859],'10Mile':[10.0,0.7862 ],'20km':[12.4,0.787 ],'H.Mar':[13.1, 0.7872],'25km':[15.5,0.7872 ],'30km':[18.6,0.7872 ],'Marathon':[26.2, 0.7872],'50km':[31.1, 0.7872],'50Mile':[50.0,0.7872], '100km':[62.1,0.7872],'150km':[93.2,0.7872],'100Mile':[100.0,0.7872  ],'200km':[124.2,0.7872 ]},
+    
+  
+    '65':{ '5km':[3.1,0.7796 ],'6km':[3.7,0.7785 ],'4Mile':[4.0,0.7781 ],'8km':[5.0,0.7774 ],'5Mile':[5.0,0.7774  ],'10km':[6.2,0.7771 ],'12km':[7.5,0.7776 ],'15km':[9.3,0.7782],'10Mile':[10.0,0.7785 ],'20km':[12.4,0.7792 ],'H.Mar':[13.1, 0.7794],'25km':[15.5, 0.7794],'30km':[18.6,0.7794 ],'Marathon':[26.2, ],'50km':[31.1, 0.7794],'50Mile':[50.0,0.7794 ], '100km':[62.1, 0.7794],'150km':[93.2, 0.7794],'100Mile':[100.0, 0.7794 ],'200km':[124.2,0.7794]},
+  
+    '66':{ '5km':[3.1,0.7729 ],'6km':[3.7,0.7715 ],'4Mile':[4.0,0.7711 ],'8km':[5.0,0.7702 ],'5Mile':[5.0,0.7701  ],'10km':[6.2,0.7696 ],'12km':[7.5,0.77 ],'15km':[9.3,0.7706],'10Mile':[10.0,0.7708 ],'20km':[12.4,0.7715 ],'H.Mar':[13.1,0.7717 ],'25km':[15.5,0.7717 ],'30km':[18.6, 0.7717],'Marathon':[26.2, 0.7717],'50km':[31.1,0.7717 ],'50Mile':[50.0,0.7717 ], '100km':[62.1,0.7717 ],'150km':[93.2,0.7717 ],'100Mile':[100.0, 0.7717 ],'200km':[124.2,0.7717 ]},
+  
+    '67':{ '5km':[3.1,0.7662 ],'6km':[3.7,0.7646 ],'4Mile':[4.0,0.7641 ],'8km':[5.0,0.7629 ],'5Mile':[5.0,0.7629  ],'10km':[6.2,0.7621 ],'12km':[7.5, 0.7625],'15km':[9.3,0.763],'10Mile':[10.0,0.7631 ],'20km':[12.4, 0.7637],'H.Mar':[13.1,0.7639 ],'25km':[15.5,0.7639 ],'30km':[18.6,0.7639 ],'Marathon':[26.2, 0.7639],'50km':[31.1,0.7639 ],'50Mile':[50.0,0.7639 ], '100km':[62.1,0.7639 ],'150km':[93.2,0.7639 ],'100Mile':[100.0,0.7639],'200km':[124.2,0.7639 ]},
+    
+  
+    '68':{ '5km':[3.1,0.7592],'6km':[3.7, 0.7577],'4Mile':[4.0,0.7571 ],'8km':[5.0,0.7557 ],'5Mile':[5.0,0.7557  ],'10km':[6.2,0.7547 ],'12km':[7.5,0.7549 ],'15km':[9.3,0.7553],'10Mile':[10.0,0.7555 ],'20km':[12.4,0.7559 ],'H.Mar':[13.1, 0.7561],'25km':[15.5,0.7561 ],'30km':[18.6, 0.7561],'Marathon':[26.2, 0.7561],'50km':[31.1, 0.7561],'50Mile':[50.0,0.7561 ], '100km':[62.1, 0.7561],'150km':[93.2,0.7561 ],'100Mile':[100.0, 0.7561 ],'200km':[124.2,0.7561 ]},
+  
+  
+    '69':{ '5km':[3.1,0.7515],'6km':[3.7,0.7501 ],'4Mile':[4.0,0.7495 ],'8km':[5.0,0.7482 ],'5Mile':[5.0,0.7482  ],'10km':[6.2,0.7471 ],'12km':[7.5,0.7474 ],'15km':[9.3,0.7477],'10Mile':[10.0,0.7478 ],'20km':[12.4,0.7482 ],'H.Mar':[13.1, 0.7483],'25km':[15.5,0.7483],'30km':[18.6, 0.7483],'Marathon':[26.2, 0.7483],'50km':[31.1,0.7483 ],'50Mile':[50.0, 0.7483], '100km':[62.1,0.7483 ],'150km':[93.2,0.7483 ],'100Mile':[100.0, 0.7483 ],'200km':[124.2,0.7483 ]},
+  
+    '70':{ '5km':[3.1,0.7433 ],'6km':[3.7,0.7419 ],'4Mile':[4.0,0.7412 ],'8km':[5.0,0.7401 ],'5Mile':[5.0,0.7401  ],'10km':[6.2,0.7391 ],'12km':[7.5,0.7395 ],'15km':[9.3,0.7399],'10Mile':[10.0,0.7401 ],'20km':[12.4, 0.7483],'H.Mar':[13.1,0.7405 ],'25km':[15.5,0.7405 ],'30km':[18.6,0.7405 ],'Marathon':[26.2, 0.7405],'50km':[31.1, 0.7405],'50Mile':[50.0, 0.7405], '100km':[62.1, 0.7405],'150km':[93.2,0.7405 ],'100Mile':[100.0, 0.7405 ],'200km':[124.2, 0.7405]},
+  
+    '71':{ '5km':[3.1,0.7344 ],'6km':[3.7,0.7331 ],'4Mile':[4.0,0.7323 ],'8km':[5.0,0.7314 ],'5Mile':[5.0,0.7314  ],'10km':[6.2,0.7305 ],'12km':[7.5,0.731 ],'15km':[9.3,0.7315],'10Mile':[10.0,0.7317 ],'20km':[12.4,0.7322 ],'H.Mar':[13.1,0.7324 ],'25km':[15.5,0.7324 ],'30km':[18.6,0.7324 ],'Marathon':[26.2,0.7324],'50km':[31.1,0.7324],'50Mile':[50.0,0.7324], '100km':[62.1,0.7324 ],'150km':[93.2,0.7324 ],'100Mile':[100.0, 0.7324 ],'200km':[124.2, 0.7324]},
+  
+    
+    '72':{ '5km':[3.1,0.7249 ],'6km':[3.7,0.7237 ],'4Mile':[4.0,0.7228 ],'8km':[5.0,0.722 ],'5Mile':[5.0,0.722  ],'10km':[6.2, 0.7211],'12km':[7.5, 0.7218],'15km':[9.3,0.7224],'10Mile':[10.0,0.7227 ],'20km':[12.4,0.7234 ],'H.Mar':[13.1,0.7236 ],'25km':[15.5, 0.7236],'30km':[18.6,0.7236 ],'Marathon':[26.2,0.7236 ],'50km':[31.1,0.7236 ],'50Mile':[50.0,0.7236 ], '100km':[62.1,0.7236 ],'150km':[93.2, 0.7236],'100Mile':[100.0, 0.7236 ],'200km':[124.2,0.7236 ]},
+  
+    '73':{ '5km':[3.1,0.7147 ],'6km':[3.7,0.7136],'4Mile':[4.0,0.7126 ],'8km':[5.0,0.7119 ],'5Mile':[5.0, 0.7119 ],'10km':[6.2,0.7112],'12km':[7.5,0.7119 ],'15km':[9.3,0.7127],'10Mile':[10.0,0.713 ],'20km':[12.4, 0.7138],'H.Mar':[13.1,0.714 ],'25km':[15.5,0.714 ],'30km':[18.6, 0.714],'Marathon':[26.2,0.714 ],'50km':[31.1, 0.714],'50Mile':[50.0, 0.714], '100km':[62.1, 0.714],'150km':[93.2,0.714 ],'100Mile':[100.0, 0.714 ],'200km':[124.2, 0.714]},
+  
+    '74':{ '5km':[3.1,0.704 ],'6km':[3.7,0.7028 ],'4Mile':[4.0,0.7018 ],'8km':[5.0, 0.7012],'5Mile':[5.0, 0.7012 ],'10km':[6.2,0.7005 ],'12km':[7.5,0.7013 ],'15km':[9.3,0.7022],'10Mile':[10.0, 0.7026],'20km':[12.4,0.7035 ],'H.Mar':[13.1, 0.7038],'25km':[15.5,0.7038 ],'30km':[18.6,0.7038 ],'Marathon':[26.2,0.7038 ],'50km':[31.1, 0.7038],'50Mile':[50.0,0.7038 ], '100km':[62.1,0.7038 ],'150km':[93.2, 0.7038],'100Mile':[100.0, 0.7038 ],'200km':[124.2, 0.7038]},
+    
+  
+    '75':{ '5km':[3.1,0.6926 ],'6km':[3.7,0.6915 ],'4Mile':[4.0,0.6903 ],'8km':[5.0,0.6899 ],'5Mile':[5.0, 0.6899 ],'10km':[6.2,0.6892 ],'12km':[7.5,0.6901 ],'15km':[9.3,0.6911],'10Mile':[10.0,0.6915],'20km':[12.4,0.6926 ],'H.Mar':[13.1,0.6929 ],'25km':[15.5,0.6929 ],'30km':[18.6, 0.6929],'Marathon':[26.2, 0.6929],'50km':[31.1,0.6929 ],'50Mile':[50.0,0.6929 ], '100km':[62.1, 0.6929],'150km':[93.2,0.6929 ],'100Mile':[100.0,0.6929  ],'200km':[124.2,0.6929 ]},
+  
+    '76':{ '5km':[3.1,0.6806 ],'6km':[3.7, 0.6795],'4Mile':[4.0, 0.6782],'8km':[5.0, 0.6779],'5Mile':[5.0, 0.6779 ],'10km':[6.2,0.6772 ],'12km':[7.5, 0.6782],'15km':[9.3,0.6793],'10Mile':[10.0,0.6797],'20km':[12.4,0.6809 ],'H.Mar':[13.1, ],'25km':[15.5, 0.6809],'30km':[18.6,0.6809 ],'Marathon':[26.2, 0.6809],'50km':[31.1, 0.6809],'50Mile':[50.0,0.6809 ], '100km':[62.1, 0.6809],'150km':[93.2, 0.6809],'100Mile':[100.0,  0.6809],'200km':[124.2, 0.6809]},
+  
+    '77':{ '5km':[3.1,0.668 ],'6km':[3.7,0.6668 ],'4Mile':[4.0, 0.6655],'8km':[5.0,0.6653 ],'5Mile':[5.0,0.6653  ],'10km':[6.2,0.6646 ],'12km':[7.5,0.6656 ],'15km':[9.3,0.6668],'10Mile':[10.0,0.6673 ],'20km':[12.4, 0.6686],'H.Mar':[13.1,0.6689 ],'25km':[15.5,0.6689],'30km':[18.6,0.6689 ],'Marathon':[26.2, 0.6689],'50km':[31.1,0.6689 ],'50Mile':[50.0,0.6689], '100km':[62.1, 0.6689],'150km':[93.2,0.6689 ],'100Mile':[100.0, 0.6689 ],'200km':[124.2, 0.6689]},
+    
+  
+    '78':{ '5km':[3.1,0.6547 ],'6km':[3.7, 0.6535],'4Mile':[4.0, 0.6521],'8km':[5.0,0.652 ],'5Mile':[5.0,0.652  ],'10km':[6.2,0.6513 ],'12km':[7.5,0.6524],'15km':[9.3,],'10Mile':[10.0, 0.6537],'20km':[12.4, 0.6555],'H.Mar':[13.1,0.6559 ],'25km':[15.5, 0.6559],'30km':[18.6, 0.6559],'Marathon':[26.2,0.6559 ],'50km':[31.1, 0.6559],'50Mile':[50.0,0.6559 ], '100km':[62.1, ],'150km':[93.2,0.6559],'100Mile':[100.0, 0.6559 ],'200km':[124.2,0.6559]},
+  
+  
+    '79':{ '5km':[3.1,0.6408 ],'6km':[3.7,0.6408 ],'4Mile':[4.0,0.6381 ],'8km':[5.0,0.638 ],'5Mile':[5.0, 0.638 ],'10km':[6.2,0.6374 ],'12km':[7.5,0.6385],'15km':[9.3,0.6398],'10Mile':[10.0,0.6403],'20km':[12.4,0.6418 ],'H.Mar':[13.1,0.6422],'25km':[15.5,0.6422 ],'30km':[18.6,0.6422 ],'Marathon':[26.2,0.6422 ],'50km':[31.1, 0.6422],'50Mile':[50.0,0.6422 ], '100km':[62.1,0.6422 ],'150km':[93.2,0.6422 ],'100Mile':[100.0, 0.6422 ],'200km':[124.2, 0.6422]},
+  
+    '80':{ '5km':[3.1,0.6263 ],'6km':[3.7,0.625 ],'4Mile':[4.0,0.6235 ],'8km':[5.0,0.6235 ],'5Mile':[5.0,0.6235  ],'10km':[6.2,0.6228 ],'12km':[7.5, 0.6239],'15km':[9.3,0.6253],'10Mile':[10.0, 0.6258],'20km':[12.4,0.6273 ],'H.Mar':[13.1,0.6277 ],'25km':[15.5, 0.6277],'30km':[18.6, 0.6277],'Marathon':[26.2,0.6277 ],'50km':[31.1,0.6277 ],'50Mile':[50.0, 0.6277], '100km':[62.1,0.6277 ],'150km':[93.2, 0.6277],'100Mile':[100.0, 0.6277 ],'200km':[124.2, 0.6277]},
+  
+    '81':{ '5km':[3.1,0.6112 ],'6km':[3.7,0.6098 ],'4Mile':[4.0, 0.6082],'8km':[5.0,0.6082 ],'5Mile':[5.0,0.6082  ],'10km':[6.2,0.6075 ],'12km':[7.5, 0.6087],'15km':[9.3,0.6101],'10Mile':[10.0,0.6106 ],'20km':[12.4,0.6122 ],'H.Mar':[13.1, 0.6126],'25km':[15.5, 0.6126],'30km':[18.6, 0.6126],'Marathon':[26.2,0.6126 ],'50km':[31.1, 0.6126],'50Mile':[50.0,0.6126 ], '100km':[62.1,0.6126 ],'150km':[93.2, 0.6126],'100Mile':[100.0,  0.6126],'200km':[124.2, 0.6126]},
+  
+    '82':{ '5km':[3.1,0.5955 ],'6km':[3.7,0.594 ],'4Mile':[4.0,0.594 ],'8km':[5.0,0.5923 ],'5Mile':[5.0,0.5924  ],'10km':[6.2, 0.5916],'12km':[7.5,0.5928 ],'15km':[9.3,0.5942],'10Mile':[10.0,0.5947 ],'20km':[12.4, 0.5963],'H.Mar':[13.1,0.5968],'25km':[15.5,0.5968 ],'30km':[18.6, 0.5968],'Marathon':[26.2,0.5968 ],'50km':[31.1, 0.5968],'50Mile':[50.0, 0.5968], '100km':[62.1,0.5968 ],'150km':[93.2, 0.5968],'100Mile':[100.0, 0.5968 ],'200km':[124.2, 0.5968]},
+  
+    '83':{ '5km':[3.1,0.5791 ],'6km':[3.7, 0.5775],'4Mile':[4.0,0.5758],'8km':[5.0, 0.5758],'5Mile':[5.0,0.5758  ],'10km':[6.2,0.575 ],'12km':[7.5, 0.5762, ],'15km':[9.3,0.5776],'10Mile':[10.0,0.5782 ],'20km':[12.4, 0.5968],'H.Mar':[13.1,0.5968 ],'25km':[15.5,0.5968],'30km':[18.6,0.5968],'Marathon':[26.2,0.5968],'50km':[31.1,0.5968],'50Mile':[50.0,0.5968], '100km':[62.1,0.5968 ],'150km':[93.2,0.5968],'100Mile':[100.0, 0.5968 ],'200km':[124.2,0.5968 ]},
+  
+    '84':{ '5km':[3.1,0.5782 ],'6km':[3.7, 0.5604],'4Mile':[4.0,0.5586 ],'8km':[5.0,0.5586 ],'5Mile':[5.0, 0.5587 ],'10km':[6.2,0.5587 ],'12km':[7.5,0.5587],'15km':[9.3,0.5603],'10Mile':[10.0, 0.5609],'20km':[12.4,0.5625 ],'H.Mar':[13.1,0.563 ],'25km':[15.5,0.563],'30km':[18.6,0.563],'Marathon':[26.2,0.563],'50km':[31.1, 0.563],'50Mile':[50.0,0.563], '100km':[62.1,0.563],'150km':[93.2,0.563],'100Mile':[100.0,0.563],'200km':[124.2,0.563]},
+    
+  
+    '85':{ '5km':[3.1,0.5609 ],'6km':[3.7,0.5427],'4Mile':[4.0,0.5407 ],'8km':[5.0, 0.5408],'5Mile':[5.0, 0.5409 ],'10km':[6.2,0.5398],'12km':[7.5,0.541 ],'15km':[9.3,0.5424],'10Mile':[10.0, 0.543],'20km':[12.4,0.5446],'H.Mar':[13.1,0.5451],'25km':[15.5, 0.5451],'30km':[18.6,0.5451],'Marathon':[26.2,0.5451 ],'50km':[31.1, 0.5451],'50Mile':[50.0,0.5451], '100km':[62.1,0.5451],'150km':[93.2,0.5451],'100Mile':[100.0,0.5451],'200km':[124.2,0.5451 ]},
+  
+    '86':{ '5km':[3.1,0.5262 ],'6km':[3.7,0.5243 ],'4Mile':[4.0,0.5223 ],'8km':[5.0,0.5223 ],'5Mile':[5.0,0.5224  ],'10km':[6.2,0.5213 ],'12km':[7.5,0.5224 ],'15km':[9.3,0.5238],'10Mile':[10.0,0.5244 ],'20km':[12.4, 0.5451],'H.Mar':[13.1,0.5265 ],'25km':[15.5,0.5265],'30km':[18.6,0.5265],'Marathon':[26.2,0.5265],'50km':[31.1,0.5265 ],'50Mile':[50.0, 0.5265], '100km':[62.1, 0.5265],'150km':[93.2,0.5265],'100Mile':[100.0,0.5265  ],'200km':[124.2,0.5265 ]},
+  
+    '87':{ '5km':[3.1,0.5074 ],'6km':[3.7,0.5074],'4Mile':[4.0,0.5032],'8km':[5.0,0.5032],'5Mile':[5.0, 0.5033 ],'10km':[6.2,0.502],'12km':[7.5,0.5031 ],'15km':[9.3,0.5045],'10Mile':[10.0,0.505 ],'20km':[12.4, 0.5066],'H.Mar':[13.1,0.5071],'25km':[15.5,0.5071],'30km':[18.6,0.5071],'Marathon':[26.2, 0.5071],'50km':[31.1,0.5071],'50Mile':[50.0, 0.5071], '100km':[62.1,0.5071],'150km':[93.2,0.5071],'100Mile':[100.0,0.5071],'200km':[124.2,0.5071]},
+    
+  
+    '88':{ '5km':[3.1,0.4879 ],'6km':[3.7,0.4856],'4Mile':[4.0,0.4834 ],'8km':[5.0,0.4835 ],'5Mile':[5.0,0.4835  ],'10km':[6.2, 0.4821],'12km':[7.5, 0.4832],'15km':[9.3,0.4845],'10Mile':[10.0,0.485 ],'20km':[12.4,0.5071],'H.Mar':[13.1,0.5071],'25km':[15.5,0.5071],'30km':[18.6,0.5071 ],'Marathon':[26.2,0.5071],'50km':[31.1,0.5071 ],'50Mile':[50.0,0.5071], '100km':[62.1,0.5071],'150km':[93.2,0.5071],'100Mile':[100.0,0.5071],'200km':[124.2,0.5071]},
+  
+  
+    '89':{ '5km':[3.1,0.4678 ],'6km':[3.7,0.4653 ],'4Mile':[4.0, 0.463],'8km':[5.0, 0.463],'5Mile':[5.0, 0.4631 ],'10km':[6.2,0.4616 ],'12km':[7.5,0.4626 ],'15km':[9.3,0.4638],'10Mile':[10.0,0.4644 ],'20km':[12.4, 0.5071],'H.Mar':[13.1,0.4664],'25km':[15.5, 0.4664],'30km':[18.6,0.4664],'Marathon':[26.2, 0.4664],'50km':[31.1,0.4664 ],'50Mile':[50.0, 0.4664], '100km':[62.1, 0.4664],'150km':[93.2, 0.4664],'100Mile':[100.0,0.4664],'200km':[124.2, 0.4664]},
+  
+    '90':{ '5km':[3.1, 0.447],'6km':[3.7, 0.4443],'4Mile':[4.0,0.442 ],'8km':[5.0, 0.442],'5Mile':[5.0,  0.442],'10km':[6.2, 0.4404],'12km':[7.5,0.4413 ],'15km':[9.3,0.4425],'10Mile':[10.0, 0.443],'20km':[12.4,0.4444 ],'H.Mar':[13.1,0.4449 ],'25km':[15.5,0.4449 ],'30km':[18.6,0.4449 ],'Marathon':[26.2, 0.4449],'50km':[31.1, 0.4449],'50Mile':[50.0, 0.4449], '100km':[62.1,0.4449],'150km':[93.2,0.4449 ],'100Mile':[100.0, 0.4449 ],'200km':[124.2,0.4449 ]},
+  
+    '91':{ '5km':[3.1,0.4257 ],'6km':[3.7,0.4228 ],'4Mile':[4.0, 0.4204],'8km':[5.0,0.4203 ],'5Mile':[5.0,0.4203  ],'10km':[6.2,0.4185 ],'12km':[7.5,0.4194 ],'15km':[9.3,0.4204],'10Mile':[10.0,0.4209 ],'20km':[12.4,0.4223 ],'H.Mar':[13.1,0.4228],'25km':[15.5,0.4228 ],'30km':[18.6,0.4228 ],'Marathon':[26.2, 0.4228],'50km':[31.1, 0.4228],'50Mile':[50.0,0.4228 ], '100km':[62.1, 0.4228],'150km':[93.2, 0.4228],'100Mile':[100.0,0.4228  ],'200km':[124.2,0.4228 ]},
+  
+    '92':{ '5km':[3.1,0.4037],'6km':[3.7,0.4005 ],'4Mile':[4.0,0.3981 ],'8km':[5.0, 0.3979],'5Mile':[5.0, 0.398 ],'10km':[6.2,0.396],'12km':[7.5, 0.3968],'15km':[9.3,0.3977],'10Mile':[10.0,0.3982 ],'20km':[12.4, 0.3994],'H.Mar':[13.1,0.4 ],'25km':[15.5,0.4 ],'30km':[18.6,0.4 ],'Marathon':[26.2,0.4 ],'50km':[31.1, 0.4],'50Mile':[50.0,0.4 ], '100km':[62.1,0.4],'150km':[93.2,0.4 ],'100Mile':[100.0,0.4 ],'200km':[124.2,0.4]},
+  
+  
+    '93':{ '5km':[3.1,0.3811 ],'6km':[3.7,0.3777 ],'4Mile':[4.0, 0.3751],'8km':[5.0,0.3749 ],'5Mile':[5.0,0.375  ],'10km':[6.2, 0.3728],'12km':[7.5,0.3735 ],'15km':[9.3,0.3743],'10Mile':[10.0, 0.3748],'20km':[12.4,0.3759 ],'H.Mar':[13.1,0.3764 ],'25km':[15.5,0.3764 ],'30km':[18.6, 0.3764],'Marathon':[26.2,0.3764 ],'50km':[31.1, 0.3764],'50Mile':[50.0,0.3764 ], '100km':[62.1,0.3764 ],'150km':[93.2, 0.3764],'100Mile':[100.0,  0.3764],'200km':[124.2, 0.3764]},
+    
+  
+    '94':{ '5km':[3.1,0.3578 ],'6km':[3.7, 0.3542],'4Mile':[4.0, 0.3516],'8km':[5.0,0.3512 ],'5Mile':[5.0, 0.3513 ],'10km':[6.2,0.3489 ],'12km':[7.5,0.3495 ],'15km':[9.3,0.3502],'10Mile':[10.0,0.3506 ],'20km':[12.4,0.3517 ],'H.Mar':[13.1,0.3522 ],'25km':[15.5,0.3522 ],'30km':[18.6,0.3522],'Marathon':[26.2,0.3522 ],'50km':[31.1, 0.3522],'50Mile':[50.0, 0.3522], '100km':[62.1, 0.3522],'150km':[93.2,0.3522 ],'100Mile':[100.0,0.3522  ],'200km':[124.2, 0.3522]},
+  
+    '95':{ '5km':[3.1,0.334],'6km':[3.7,0.3301 ],'4Mile':[4.0,0.3273 ],'8km':[5.0, 0.3269],'5Mile':[5.0,  0.3269],'10km':[6.2,0.3269 ],'12km':[7.5,0.3249 ],'15km':[9.3,0.3255],'10Mile':[10.0,0.3258],'20km':[12.4,0.3267 ],'H.Mar':[13.1,0.3273 ],'25km':[15.5,0.3273 ],'30km':[18.6, 0.3273],'Marathon':[26.2,0.3273 ],'50km':[31.1,0.3273 ],'50Mile':[50.0,0.3273], '100km':[62.1,0.3273 ],'150km':[93.2, 0.3273],'100Mile':[100.0, 0.3273 ],'200km':[124.2, 0.3273]},
+  
+  
+    '96':{ '5km':[3.1,0.3095],'6km':[3.7, 0.3053],'4Mile':[4.0,0.3025 ],'8km':[5.0, 0.302],'5Mile':[5.0, 0.327 ],'10km':[6.2, ],'12km':[7.5, ],'15km':[9.3,],'10Mile':[10.0, ],'20km':[12.4,0.3011 ],'H.Mar':[13.1,0.3017 ],'25km':[15.5, 0.3017],'30km':[18.6,0.3017 ],'Marathon':[26.2,0.3017 ],'50km':[31.1, 0.3017],'50Mile':[50.0, 0.3017], '100km':[62.1,0.3017 ],'150km':[93.2, 0.3017],'100Mile':[100.0, 0.3017 ],'200km':[124.2,0.3017 ]},
+  
+    '97':{ '5km':[3.1,0.2844 ],'6km':[3.7,0.2799 ],'4Mile':[4.0,0.277 ],'8km':[5.0,0.2764 ],'5Mile':[5.0, 0.2765 ],'10km':[6.2,0.2734 ],'12km':[7.5, 0.2736],'15km':[9.3,0.2739],'10Mile':[10.0,0.2742],'20km':[12.4,0.2748 ],'H.Mar':[13.1,0.2753 ],'25km':[15.5,0.2753 ],'30km':[18.6, 0.2753],'Marathon':[26.2, 0.2753],'50km':[31.1,0.2753 ],'50Mile':[50.0,0.2753 ], '100km':[62.1, ],'150km':[93.2, 0.2753],'100Mile':[100.0, 0.2753 ],'200km':[124.2, 0.2753]},
+  
+    '98':{ '5km':[3.1,0.2586 ],'6km':[3.7,0.2538 ],'4Mile':[4.0, 0.2509],'8km':[5.0,0.2501],'5Mile':[5.0,0.2502  ],'10km':[6.2,0.247 ],'12km':[7.5,0.247 ],'15km':[9.3,0.2471],'10Mile':[10.0,0.2473 ],'20km':[12.4,0.2478 ],'H.Mar':[13.1,0.2483],'25km':[15.5, 0.2483],'30km':[18.6, 0.2483],'Marathon':[26.2,0.2483 ],'50km':[31.1,0.2483 ],'50Mile':[50.0,0.2483 ], '100km':[62.1,0.2483 ],'150km':[93.2,0.2483 ],'100Mile':[100.0,  0.2483],'200km':[124.2, 0.2483]},
+  
+  
+    '99':{ '5km':[3.1,0.2323],'6km':[3.7,0.2272 ],'4Mile':[4.0,0.2241 ],'8km':[5.0,0.2232 ],'5Mile':[5.0, 0.2234 ],'10km':[6.2,0.2198],'12km':[7.5,0.2198],'15km':[9.3,0.2196],'10Mile':[10.0,0.2198],'20km':[12.4,0.2201 ],'H.Mar':[13.1,0.2206 ],'25km':[15.5,0.2206 ],'30km':[18.6,0.2206 ],'Marathon':[26.2,0.2206 ],'50km':[31.1,0.2206 ],'50Mile':[50.0,0.2206 ], '100km':[62.1, 0.2206],'150km':[93.2, 0.2206],'100Mile':[100.0,  0.2206],'200km':[124.2, 0.2206]},
+  
+    '100':{ '5km':[3.1, 0.2053],'6km':[3.7,0.1998 ],'4Mile':[4.0, 0.1967],'8km':[5.0,0.1957],'5Mile':[5.0, 0.1958 ],'10km':[6.2,0.192 ],'12km':[7.5,0.1917 ],'15km':[9.3,0.1914],'10Mile':[10.0,0.1916 ],'20km':[12.4,0.1917 ],'H.Mar':[13.1, 0.1921],'25km':[15.5,0.1921 ],'30km':[18.6, 0.1921],'Marathon':[26.2,0.1921 ],'50km':[31.1, 0.1921],'50Mile':[50.0,0.1921 ], '100km':[62.1,0.1921 ],'150km':[93.2, 0.1921],'100Mile':[100.0, 0.1921 ],'200km':[124.2, 0.1921]},
+  }
+  // ------------------Female-------------------------------------------------------------
+  
+  var womens = {
+    OC: { '5km': [3.1,886] ,'6km': [3.7,1071], '4Mile': [4.0,1152], '8km': [5.0,1442], '5Mile': [5.0,1452], '10km': [6.2,1820], '12km': [7.52194], '15km': [9.3,2755], '10Mile': [10.0,2961], '20km': [12.4,3700], 'H.Mar': [13.1,3912], '25km': [15.5,4665], '30km': [18.6,5660], 'Marathon': [26.2,8125], '50km': [31.1,9820], '50Mile': [50.0,17760], '100km': [62.1,23591], '150km': [93.2,39700], '100Mile': [100.0,43500], '200km': [124.2,57600]},
+  
+    '5': { '5km': [3.1,0.7010 ] ,'6km': [3.7,0.6930], '4Mile': [4.0,0.6930], '8km': [5.0, 0.6930], '5Mile': [5.0,0.6930], '10km': [6.2,0.6930], '12km': [7.5,0.6930], '15km': [9.3,0.5945], '10Mile': [10.0,0.6525], '20km': [12.4, 0.6525], 'H.Mar': [13.1,0.5945], '25km': [15.5, 0.6525, ], '30km': [18.6, 0.6525], 'Marathon': [26.2, ], '50km': [31.1,0.6930], '50Mile': [50.0,0.6930], '100km': [62.1,0.6930], '150km': [93.2,0.6930], '100Mile': [100.0,0.6930], '200km': [124.2,0.6930]},
+  
+    '6': { '5km': [3.1,0.6525] ,'6km': [3.7,0.7263], '4Mile': [4.0,0.7263], '8km': [5.0,0.7263], '5Mile': [5.0,0.7263], '10km': [6.2,0.7263], '12km': [7.5,0.7263  ], '15km': [9.3,0.6382], '10Mile': [10.0,0.6924], '20km': [12.4,0.6924], 'H.Mar': [13.1,0.6382], '25km': [15.5,0.6924], '30km': [18.6,0.6924], 'Marathon': [26.2,0.7263], '50km': [31.1,0.7263], '50Mile': [50.0,0.7263], '100km': [62.1,0.7263], '150km': [93.2,0.7263], '100Mile': [100.0,0.7263], '200km': [124.2,0.7263]},
+  
+    '7': { '5km': [3.1, 0.7658] ,'6km': [3.7,0.7578], '4Mile': [4.0,0.7578], '8km': [5.0,0.7578], '5Mile': [5.0,0.7578], '10km': [6.2,0.7578], '12km': [7.5,0.7578  ], '15km': [9.3,0.7578], '10Mile': [10.0,0.7301], '20km': [12.4,0.7301], 'H.Mar': [13.1,0.6793], '25km': [15.5,0.7301], '30km': [18.6, 0.7301], 'Marathon': [26.2,0.7578], '50km': [31.1,0.7578], '50Mile': [50.0,0.7578], '100km': [62.1,0.7578], '150km': [93.2,0.7578], '100Mile': [100.0,0.7578], '200km': [124.2,0.7578]},
+  
+    '8': { '5km': [3.1,0.7954 ] ,'6km': [3.7,0.7874], '4Mile': [4.0,0.7874], '8km': [5.0,0.7874], '5Mile': [5.0,0.7874], '10km': [6.2,0.7874], '12km': [7.5, 0.7874 ], '15km': [9.3,0.7178], '10Mile': [10.0,0.7656], '20km': [12.4,0.7656], 'H.Mar': [13.1, ], '25km': [15.5,0.7656], '30km': [18.6,0.7656], 'Marathon': [26.2,0.7874], '50km': [31.1,0.7874], '50Mile': [50.0,0.7874], '100km': [62.1,0.7874], '150km': [93.2,0.7874], '100Mile': [100.0,0.7874], '200km': [124.2,0.7874]},
+  
+    '9': { '5km': [3.1,0.8232 ] ,'6km': [3.7,0.8152], '4Mile': [4.0,0.8152], '8km': [5.0,0.8152], '5Mile': [5.0,0.8152], '10km': [6.2,0.8152], '12km': [7.5, 0.8152 ], '15km': [9.3,0.7537], '10Mile': [10.0,0.7989], '20km': [12.4,0.7989], 'H.Mar': [13.1,0.7537], '25km': [15.5,0.7989], '30km': [18.6,0.7989], 'Marathon': [26.2,0.8152], '50km': [31.1,0.8152], '50Mile': [50.0,0.8152], '100km': [62.1,0.8152], '150km': [93.2,0.8152], '100Mile': [100.0,0.8152], '200km': [124.2,0.8152]},
+  
+    '10': { '5km': [3.1,0.8493 ] ,'6km': [3.7,0.8413], '4Mile': [4.0,0.8413], '8km': [5.0,0.8413], '5Mile': [5.0,0.8413], '10km': [6.2,0.8413], '12km': [7.5,0.8413  ], '15km': [9.3,0.7870], '10Mile': [10.0,0.8300], '20km': [12.4,0.8300], 'H.Mar': [13.1,0.7870], '25km': [15.5,0.8300], '30km': [18.6,0.8300], 'Marathon': [26.2,0.8413], '50km': [31.1,0.8413], '50Mile': [50.0,0.8413], '100km': [62.1,0.8413], '150km': [93.2,0.8413], '100Mile': [100.0,0.8413], '200km': [124.2,0.8413]},
+  
+    '11': { '5km': [3.1,0.8734 ] ,'6km': [3.7,0.8654], '4Mile': [4.0,0.8654], '8km': [5.0,0.8654], '5Mile': [5.0,0.8654], '10km': [6.2,0.8654], '12km': [7.5, 0.8654 ], '15km': [9.3,0.8177], '10Mile': [10.0,0.8589], '20km': [12.4,0.8589], 'H.Mar': [13.1,0.8177], '25km': [15.5,0.8589], '30km': [18.6,0.8589], 'Marathon': [26.2,0.8654], '50km': [31.1,0.8654], '50Mile': [50.0,0.8654], '100km': [62.1,0.8654], '150km': [93.2,0.8654], '100Mile': [100.0, ], '200km': [124.2,0.8654]},
+  
+    '12': { '5km': [3.1,0.8958 ] ,'6km': [3.7,0.8878], '4Mile': [4.0,0.8878], '8km': [5.0,0.8878], '5Mile': [5.0,0.8878], '10km': [6.2,0.8878], '12km': [7.5,0.8878  ], '15km': [9.3,0.8458], '10Mile': [10.0,0.8856], '20km': [12.4,0.8856], 'H.Mar': [13.1,0.8458], '25km': [15.5,0.8856], '30km': [18.6,0.8856], 'Marathon': [26.2,0.8878], '50km': [31.1,0.8878], '50Mile': [50.0,0.8878], '100km': [62.1,0.8878], '150km': [93.2,0.8878], '100Mile': [100.0,0.8878], '200km': [124.2,0.8878]},
+  
+    '13': { '5km': [3.1,0.9164] ,'6km': [3.7,0.9084], '4Mile': [4.0,0.9084], '8km': [5.0,0.9084], '5Mile': [5.0,0.9084], '10km': [6.2,0.9084], '12km': [7.5, 0.9084 ], '15km': [9.3,0.8713], '10Mile': [10.0,0.9101], '20km': [12.4,0.9101], 'H.Mar': [13.1,0.8713], '25km': [15.5,0.9101], '30km': [18.6,0.9101], 'Marathon': [26.2,0.9084], '50km': [31.1,0.9084], '50Mile': [50.0,0.9084], '100km': [62.1,0.9084], '150km': [93.2,0.9084], '100Mile': [100.0,0.9084], '200km': [124.2,0.9084]},
+  
+    '14': { '5km': [3.1,0.9351] ,'6km': [3.7,0.9271], '4Mile': [4.0,0.9271], '8km': [5.0,0.9271], '5Mile': [5.0,0.9271], '10km': [6.2,0.9271], '12km': [7.5,0.9271  ], '15km': [9.3,0.8942], '10Mile': [10.0,0.9324], '20km': [12.4,0.9324], 'H.Mar': [13.1,0.8942], '25km': [15.5,0.9324], '30km': [18.6,0.9324], 'Marathon': [26.2,0.9271], '50km': [31.1,0.9271], '50Mile': [50.0,0.9271], '100km': [62.1,0.9271], '150km': [93.2,0.9271], '100Mile': [100.0,0.9271], '200km': [124.2,0.9271]},
+    
+  
+    '15': { '5km': [3.1,0.9520 ] ,'6km': [3.7,0.9440], '4Mile': [4.0,0.9440], '8km': [5.0,0.9440], '5Mile': [5.0,0.9440], '10km': [6.2,0.9440], '12km': [7.5, 0.9440 ], '15km': [9.3,0.9145], '10Mile': [10.0,0.9525], '20km': [12.4,0.9525], 'H.Mar': [13.1,0.9145], '25km': [15.5,0.9525], '30km': [18.6,0.9525], 'Marathon': [26.2,0.9440], '50km': [31.1,0.9440], '50Mile': [50.0,0.9440], '100km': [62.1,0.9440], '150km': [93.2,0.9440], '100Mile': [100.0,0.9440], '200km': [124.2,0.9440]},
+  
+    '16': { '5km': [3.1,0.9680 ] ,'6km': [3.7,0.9600], '4Mile': [4.0,0.9600], '8km': [5.0,0.9600], '5Mile': [5.0,0.9600], '10km': [6.2,0.9600], '12km': [7.5, 0.9600 ], '15km': [9.3,0.9335], '10Mile': [10.0,0.9715], '20km': [12.4,0.9715], 'H.Mar': [13.1,0.9335], '25km': [15.5,0.9715], '30km': [18.6,0.9715], 'Marathon': [26.2,0.9600], '50km': [31.1,0.9600], '50Mile': [50.0,0.9600], '100km': [62.1,0.9600], '150km': [93.2,0.9600], '100Mile': [100.0,0.9600], '200km': [124.2,0.9600]},
+  
+    '17': { '5km': [3.1,0.9840 ] ,'6km': [3.7,0.9760], '4Mile': [4.0,0.9760], '8km': [5.0,0.9760], '5Mile': [5.0,0.9760], '10km': [6.2,0.9760], '12km': [7.5, 0.9760 ], '15km': [9.3,0.9525], '10Mile': [10.0,0.9905], '20km': [12.4,0.9905], 'H.Mar': [13.1,0.9525], '25km': [15.5,0.9905], '30km': [18.6,0.9905], 'Marathon': [26.2,0.9760], '50km': [31.1,0.9760], '50Mile': [50.0,0.9760], '100km': [62.1,0.9760], '150km': [93.2,0.9760], '100Mile': [100.0,0.9760], '200km': [124.2,0.9760]},
+    
+  
+    '18': { '5km': [3.1,0.9960 ] ,'6km': [3.7,0.9893], '4Mile': [4.0,0.9893], '8km': [5.0,0.9893], '5Mile': [5.0,0.9893], '10km': [6.2,0.9893], '12km': [7.5, 0.9893 ], '15km': [9.3,0.9696], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,0.9696], '25km': [15.5,1.0000], '30km': [18.6, 1.0000], 'Marathon': [26.2,0.9893 ], '50km': [31.1, 0.9893], '50Mile': [50.0,0.9893 ], '100km': [62.1, 0.9893], '150km': [93.2, 0.9893], '100Mile': [100.0, 0.9893], '200km': [124.2, 0.9893]},
+  
+    '19': { '5km': [3.1,1.0000] ,'6km': [3.7,0.9973 ], '4Mile': [4.0,0.9973 ], '8km': [5.0,0.9973 ], '5Mile': [5.0, 0.9973], '10km': [6.2,0.9973 ], '12km': [7.5, 0.9973 ], '15km': [9.3,0.9829], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,0.9829 ], '25km': [15.5, 1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,0.9973 ], '50km': [31.1, 0.9973], '50Mile': [50.0, 0.9973], '100km': [62.1,0.9973 ], '150km': [93.2,0.9973], '100Mile': [100.0,0.9973 ], '200km': [124.2,0.9973 ]},
+  
+    
+  
+    '20': { '5km': [3.1,1.0000 ] ,'6km': [3.7,1.0000 ], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2, 1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3, 0.9924], '10Mile': [10.0,1.0000 ], '20km': [12.4,1.0000 ], 'H.Mar': [13.1, 0.9924], '25km': [15.5, 1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000 ], '50km': [31.1, 1.0000], '50Mile': [50.0, 1.0000], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000 ], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
+  
+    '21': { '5km': [3.1, ] ,'6km': [3.7, ], '4Mile': [4.0, ], '8km': [5.0, ], '5Mile': [5.0, ], '10km': [6.2, ], '12km': [7.5,  ], '15km': [9.3, ], '10Mile': [10.0, ], '20km': [12.4, ], 'H.Mar': [13.1, ], '25km': [15.5, ], '30km': [18.6, ], 'Marathon': [26.2, ], '50km': [31.1, ], '50Mile': [50.0, ], '100km': [62.1, ], '150km': [93.2, ], '100Mile': [100.0, ], '200km': [124.2, ]},
+  
+    '22': { '5km': [3.1, ] ,'6km': [3.7, ], '4Mile': [4.0, ], '8km': [5.0, ], '5Mile': [5.0, ], '10km': [6.2, ], '12km': [7.5,  ], '15km': [9.3, ], '10Mile': [10.0, ], '20km': [12.4, ], 'H.Mar': [13.1, ], '25km': [15.5, ], '30km': [18.6, ], 'Marathon': [26.2, ], '50km': [31.1, ], '50Mile': [50.0, ], '100km': [62.1, ], '150km': [93.2, ], '100Mile': [100.0, ], '200km': [124.2, ]},
+  
+    '23': { '5km': [3.1,1.0000 ] ,'6km': [3.7,1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0,1.0000], '10km': [6.2, 1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000 ], '20km': [12.4, 1.0000], 'H.Mar': [13.1, 1.0000], '25km': [15.5,1.0000 ], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000 ], '50km': [31.1,1.0000 ], '50Mile': [50.0, 1.0000], '100km': [62.1, 1.0000], '150km': [93.2,1.0000 ], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
+  
+    '24': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0,1.0000], '5Mile': [5.0,1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,1.0000], '10Mile': [10.0,1.0000 ], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000], '100Mile': [100.0, 1.0000], '200km': [124.2, 1.0000]},
+  
+    '25': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6, 1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000 ], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
+    
+  
+    '26': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000 ], '4Mile': [4.0,1.0000], '8km': [5.0,1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3, 1.0000], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2,1.0000], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
+  
+  
+    '27': { '5km': [3.1, 1.0000] ,'6km': [3.7,1.0000 ], '4Mile': [4.0,1.0000 ], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2, 1.0000], '12km': [7.5,1.0000], '15km': [9.3,1.0000 ], '10Mile': [10.0,1.0000], '20km': [12.4, 1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000 ], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000], '100Mile': [100.0,1.0000], '200km': [124.2,1.0000]},
+    
+  
+    '28': { '5km': [3.1,1.0000] ,'6km': [3.7, 1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0,1.0000 ], '10km': [6.2,1.0000], '12km': [7.5,1.0000], '15km': [9.3, 1.0000], '10Mile': [10.0,1.0000], '20km': [12.4,1.0000], 'H.Mar': [13.1,1.0000], '25km': [15.5,1.0000], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000 ], '50Mile': [50.0,1.0000 ], '100km': [62.1,1.0000 ], '150km': [93.2,1.0000 ], '100Mile': [100.0,1.0000 ], '200km': [124.2, 1.0000]},
+  
+  
+    '29': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0, 1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000], '12km': [7.5, 1.0000 ], '15km': [9.3,1.0000], '10Mile': [10.0, 1.0000], '20km': [12.4,1.0000 ], 'H.Mar': [13.1,1.0000 ], '25km': [15.5,1.0000 ], '30km': [18.6,1.0000], 'Marathon': [26.2,1.0000], '50km': [31.1,1.0000], '50Mile': [50.0,1.0000], '100km': [62.1,1.0000], '150km': [93.2, 1.0000], '100Mile': [100.0,1.0000 ], '200km': [124.2,1.0000]},
+  
+    '30': { '5km': [3.1,1.0000] ,'6km': [3.7,1.0000], '4Mile': [4.0,1.0000], '8km': [5.0, 1.0000], '5Mile': [5.0, 1.0000], '10km': [6.2,1.0000 ], '12km': [7.5,1.0000], '15km': [9.3,0.9997 ], '10Mile': [10.0,0.9997 ], '20km': [12.4,0.9997 ], 'H.Mar': [13.1,0.9997 ], '25km': [15.5, 0.9997], '30km': [18.6, 1.0000], 'Marathon': [26.2, ], '50km': [31.1,1.0000 ], '50Mile': [50.0, 1.0000], '100km': [62.1,1.0000], '150km': [93.2, 1.0000], '100Mile': [100.0, 1.0000], '200km': [124.2,1.0000 ]},
+  
+    '31': { '5km': [3.1, 0.9998] ,'6km': [3.7,0.9998 ], '4Mile': [4.0,0.9998], '8km': [5.0, 0.9998], '5Mile': [5.0,0.9998], '10km': [6.2,0.9998 ], '12km': [7.5,0.9998  ], '15km': [9.3, 0.9989], '10Mile': [10.0,0.9989 ], '20km': [12.4,0.9989], 'H.Mar': [13.1, 0.9989], '25km': [15.5,0.9989], '30km': [18.6, 0.9998], 'Marathon': [26.2,0.9998 ], '50km': [31.1, 0.9998], '50Mile': [50.0,0.9998 ], '100km': [62.1,0.9998 ], '150km': [93.2, 0.9998], '100Mile': [100.0,0.9998 ], '200km': [124.2,0.9998 ]},
+  
+    '32': { '5km': [3.1, 0.9990] ,'6km': [3.7,0.9990], '4Mile': [4.0,0.9990], '8km': [5.0,0.9990], '5Mile': [5.0, 0.9990], '10km': [6.2,0.9989], '12km': [7.5,0.9989  ], '15km': [9.3,0.9989], '10Mile': [10.0, 0.9975], '20km': [12.4,0.9975 ], 'H.Mar': [13.1,0.9975 ], '25km': [15.5,0.9975 ], '30km': [18.6, 0.9975], 'Marathon': [26.2, 0.9989], '50km': [31.1,0.9989], '50Mile': [50.0,0.9989 ], '100km': [62.1, 0.9989], '150km': [93.2,0.9989 ], '100Mile': [100.0,0.9989], '200km': [124.2,0.9989]},
+  
+    '33': { '5km': [3.1,0.9977 ] ,'6km': [3.7,0.9977], '4Mile': [4.0,0.9977], '8km': [5.0,0.9976], '5Mile': [5.0,0.9976], '10km': [6.2,0.9975 ], '12km': [7.5,0.9975], '15km': [9.3,0.9956], '10Mile': [10.0,0.9956 ], '20km': [12.4, ], 'H.Mar': [13.1, 0.9956], '25km': [15.5,0.9956 ], '30km': [18.6, 0.9955], 'Marathon': [26.2,0.9975 ], '50km': [31.1, 0.9974], '50Mile': [50.0, 0.9974], '100km': [62.1, 0.9974], '150km': [93.2, 0.9974], '100Mile': [100.0, 0.9974], '200km': [124.2,0.9974 ]},
+  
+    '34': { '5km': [3.1, 0.9959] ,'6km': [3.7,0.9958 ], '4Mile': [4.0, 0.9958], '8km': [5.0, 0.9956], '5Mile': [5.0, 0.9956], '10km': [6.2, 0.9955], '12km': [7.5,0.9955  ], '15km': [9.3, 0.9931], '10Mile': [10.0,0.9931 ], '20km': [12.4, 0.9931], 'H.Mar': [13.1, 0.9931], '25km': [15.5, 0.9930], '30km': [18.6,0.9954 ], 'Marathon': [26.2, 0.9953], '50km': [31.1,0.9953], '50Mile': [50.0,0.9953], '100km': [62.1,0.9953], '150km': [93.2,0.9953], '100Mile': [100.0,0.9953], '200km': [124.2, 0.9953]},
+  
+    '35': { '5km': [3.1,0.9935] ,'6km': [3.7,0.9933], '4Mile': [4.0, 0.9933], '8km': [5.0,0.9931 ], '5Mile': [5.0, 0.9931], '10km': [6.2,0.9930 ], '12km': [7.5,  0.9930], '15km': [9.3,0.9901 ], '10Mile': [10.0,0.9901 ], '20km': [12.4,0.9901], 'H.Mar': [13.1,0.9901 ], '25km': [15.5,0.9899 ], '30km': [18.6, 0.9928], 'Marathon': [26.2,0.9926 ], '50km': [31.1, 0.9926], '50Mile': [50.0,0.9926], '100km': [62.1, 0.9926], '150km': [93.2,0.9926 ], '100Mile': [100.0, 0.9926], '200km': [124.2, 0.9926]},
+  
+  
+    '36': { '5km': [3.1, 0.9906] ,'6km': [3.7, 0.9904], '4Mile': [4.0, 0.9903], '8km': [5.0, 0.9900], '5Mile': [5.0,0.9900 ], '10km': [6.2,0.9898], '12km': [7.5, 0.9898 ], '15km': [9.3,0.9865], '10Mile': [10.0, 0.9865], '20km': [12.4,0.9865], 'H.Mar': [13.1,0.9865 ], '25km': [15.5, 0.9863], '30km': [18.6,0.9895], 'Marathon': [26.2,0.9893 ], '50km': [31.1,0.9893 ], '50Mile': [50.0,0.9893 ], '100km': [62.1, 0.9893], '150km': [93.2,0.9893 ], '100Mile': [100.0, 0.9893], '200km': [124.2,0.9893]},
+  
+    '37': { '5km': [3.1, 0.9871] ,'6km': [3.7, 0.9868], '4Mile': [4.0,0.9867 ], '8km': [5.0, 0.9864], '5Mile': [5.0, 0.9864], '10km': [6.2, 0.9860], '12km': [7.5,  0.9860], '15km': [9.3,0.9823 ], '10Mile': [10.0,0.9823 ], '20km': [12.4, 0.9823], 'H.Mar': [13.1,0.9823 ], '25km': [15.5, 0.9821], '30km': [18.6,0.9857 ], 'Marathon': [26.2, 0.9854], '50km': [31.1, 0.9854], '50Mile': [50.0, 0.9854], '100km': [62.1,0.9854 ], '150km': [93.2,0.9854 ], '100Mile': [100.0,0.9854 ], '200km': [124.2, 0.9854]},
+  
+  
+    '38': { '5km': [3.1,0.9831 ] ,'6km': [3.7,0.9827 ], '4Mile': [4.0, 0.9826], '8km': [5.0, 0.9821], '5Mile': [5.0,0.9821 ], '10km': [6.2,0.9817 ], '12km': [7.5,0.9817  ], '15km': [9.3,0.9776 ], '10Mile': [10.0, 0.9776], '20km': [12.4,0.9776 ], 'H.Mar': [13.1,0.9776 ], '25km': [15.5,0.9774 ], '30km': [18.6, 0.9813], 'Marathon': [26.2, 0.9808], '50km': [31.1,0.9808 ], '50Mile': [50.0,0.9808], '100km': [62.1,0.9808 ], '150km': [93.2,0.9808 ], '100Mile': [100.0,0.9808], '200km': [124.2,0.9808 ]},
+  
+  
+    '39': { '5km': [3.1, 0.9785] ,'6km': [3.7, 0.9781], '4Mile': [4.0, 0.9779], '8km': [5.0, 0.9773], '5Mile': [5.0,0.9773 ], '10km': [6.2, 0.9768], '12km': [7.5,0.9768  ], '15km': [9.3, 0.9724], '10Mile': [10.0,0.9724 ], '20km': [12.4,0.9724 ], 'H.Mar': [13.1,0.9724 ], '25km': [15.5,0.9720 ], '30km': [18.6,0.9762 ], 'Marathon': [26.2, 0.9757], '50km': [31.1,0.9757 ], '50Mile': [50.0,0.9757 ], '100km': [62.1, 0.9757], '150km': [93.2,0.9757 ], '100Mile': [100.0, 0.9757], '200km': [124.2,0.9757 ]},
+  
+    '40': { '5km': [3.1, 0.9734] ,'6km': [3.7,0.9728 ], '4Mile': [4.0,0.9726 ], '8km': [5.0,0.9720 ], '5Mile': [5.0, 0.9719], '10km': [6.2, 0.9713], '12km': [7.5,0.9713  ], '15km': [9.3,0.9666 ], '10Mile': [10.0,0.9666 ], '20km': [12.4, 0.9666], 'H.Mar': [13.1, 0.9666], '25km': [15.5, 0.9662], '30km': [18.6,0.9706 ], 'Marathon': [26.2, 0.9699], '50km': [31.1,0.9699 ], '50Mile': [50.0,0.9699 ], '100km': [62.1,0.9699 ], '150km': [93.2, 0.9699], '100Mile': [100.0,0.9699 ], '200km': [124.2,0.9699 ]},
+  
+    '41': { '5km': [3.1,0.9678 ] ,'6km': [3.7, 0.9671], '4Mile': [4.0,0.9668 ], '8km': [5.0,0.9660 ], '5Mile': [5.0,0.9660 ], '10km': [6.2,0.9652 ], '12km': [7.5, 0.9652 ], '15km': [9.3, 0.9602], '10Mile': [10.0, 0.9602], '20km': [12.4, 0.9602], 'H.Mar': [13.1,0.9602 ], '25km': [15.5, 0.9597], '30km': [18.6,0.9643 ], 'Marathon': [26.2,0.9635 ], '50km': [31.1, 0.9635], '50Mile': [50.0,0.9635 ], '100km': [62.1,0.9635 ], '150km': [93.2,0.9635 ], '100Mile': [100.0, 0.9635], '200km': [124.2,0.9635 ]},
+  
+    '42': { '5km': [3.1,0.9616 ] ,'6km': [3.7, 0.9608], '4Mile': [4.0,0.9605 ], '8km': [5.0, 0.9595], '5Mile': [5.0,0.9594 ], '10km': [6.2, 0.9585], '12km': [7.5, 0.9585 ], '15km': [9.3,0.9533 ], '10Mile': [10.0,0.9533 ], '20km': [12.4, 0.9533], 'H.Mar': [13.1,0.9533 ], '25km': [15.5, 0.9528], '30km': [18.6,0.9575 ], 'Marathon': [26.2,0.9565 ], '50km': [31.1,0.9565 ], '50Mile': [50.0,0.9565 ], '100km': [62.1,0.9565 ], '150km': [93.2,0.9565 ], '100Mile': [100.0, 0.9565], '200km': [124.2, 0.9565]},
+  
+  
+    '43': { '5km': [3.1,0.9549 ] ,'6km': [3.7,0.9539 ], '4Mile': [4.0, 0.9535], '8km': [5.0, 0.9524], '5Mile': [5.0,0.9523 ], '10km': [6.2, 0.9512], '12km': [7.5,  0.9512], '15km': [9.3,0.9458 ], '10Mile': [10.0,0.9458 ], '20km': [12.4, 0.9458], 'H.Mar': [13.1,0.9458 ], '25km': [15.5,0.9452 ], '30km': [18.6, 0.9489], 'Marathon': [26.2,0.9489 ], '50km': [31.1,0.9489 ], '50Mile': [50.0,0.9489], '100km': [62.1, 0.9489], '150km': [93.2, 0.9489], '100Mile': [100.0, 0.9489], '200km': [124.2,0.9489]},
+  
+    '44': { '5km': [3.1,0.9476] ,'6km': [3.7,0.9465 ], '4Mile': [4.0, 0.9460], '8km': [5.0, 0.9447], '5Mile': [5.0, 0.9447], '10km': [6.2, 0.9433], '12km': [7.5,0.9433  ], '15km': [9.3,0.9378], '10Mile': [10.0,0.9378 ], '20km': [12.4,0.9378 ], 'H.Mar': [13.1,0.9378 ], '25km': [15.5,0.9371 ], '30km': [18.6,0.9420 ], 'Marathon': [26.2, 0.9406], '50km': [31.1, 0.9406], '50Mile': [50.0, 0.9406], '100km': [62.1,0.9406 ], '150km': [93.2,0.9406 ], '100Mile': [100.0, 0.9406], '200km': [124.2, 0.9406]},
+    
+  
+    '45': { '5km': [3.1,0.9398 ] ,'6km': [3.7,0.9385 ], '4Mile': [4.0,0.9380 ], '8km': [5.0,0.9365 ], '5Mile': [5.0, 0.9364], '10km': [6.2, 0.9349], '12km': [7.5,  0.9349], '15km': [9.3,0.9293 ], '10Mile': [10.0,0.9293 ], '20km': [12.4, 0.9293], 'H.Mar': [13.1, 0.9293], '25km': [15.5,0.9284 ], '30km': [18.6, 0.9333], 'Marathon': [26.2,0.9318 ], '50km': [31.1,0.9318 ], '50Mile': [50.0, ], '100km': [62.1,0.9318 ], '150km': [93.2, 0.9318], '100Mile': [100.0, 0.9318], '200km': [124.2,0.9318 ]},
+  
+    '46': { '5km': [3.1,0.9314 ] ,'6km': [3.7,0.9300 ], '4Mile': [4.0, 0.9294], '8km': [5.0, 0.9276], '5Mile': [5.0,0.9276 ], '10km': [6.2, 0.9259], '12km': [7.5, 0.9259 ], '15km': [9.3, 0.9201], '10Mile': [10.0,0.9201 ], '20km': [12.4,0.9201 ], 'H.Mar': [13.1,0.9201 ], '25km': [15.5,0.9192 ], '30km': [18.6,0.9241 ], 'Marathon': [26.2,0.9223 ], '50km': [31.1, 0.9223], '50Mile': [50.0, 0.9223], '100km': [62.1, 0.9223], '150km': [93.2, 0.9223], '100Mile': [100.0, 0.9223], '200km': [124.2,0.9223 ]},
+  
+    '47': { '5km': [3.1,0.9225 ] ,'6km': [3.7,0.9209 ], '4Mile': [4.0,0.9202 ], '8km': [5.0, 0.9183], '5Mile': [5.0, 0.9182], '10km': [6.2,0.9162], '12km': [7.5,0.9162  ], '15km': [9.3, 0.9105], '10Mile': [10.0, 0.9105], '20km': [12.4, 0.9105], 'H.Mar': [13.1, 0.9105], '25km': [15.5, 0.9094], '30km': [18.6,0.9142 ], 'Marathon': [26.2, 0.9122], '50km': [31.1, 0.9122], '50Mile': [50.0,0.9122 ], '100km': [62.1,0.9122 ], '150km': [93.2,0.9122 ], '100Mile': [100.0, 0.9122], '200km': [124.2, 0.9122]},
+    
+  
+    '48': { '5km': [3.1,0.9131 ] ,'6km': [3.7, 0.9112], '4Mile': [4.0, 0.9105], '8km': [5.0,0.9083 ], '5Mile': [5.0, 0.9082], '10km': [6.2, 0.9060], '12km': [7.5, 0.9060 ], '15km': [9.3, 0.9003], '10Mile': [10.0, 0.9003], '20km': [12.4, 0.9003], 'H.Mar': [13.1,0.8991], '25km': [15.5,0.9038 ], '30km': [18.6, 0.9016], 'Marathon': [26.2,0.9016 ], '50km': [31.1,0.9016 ], '50Mile': [50.0, 0.9016], '100km': [62.1, 0.9016], '150km': [93.2,0.9016 ], '100Mile': [100.0, 0.9016], '200km': [124.2, 0.9016]},
+  
+  
+    '49': { '5km': [3.1, 0.9034] ,'6km': [3.7,0.9013 ], '4Mile': [4.0,0.9005 ], '8km': [5.0,0.8981 ], '5Mile': [5.0, 0.8980], '10km': [6.2,0.8955 ], '12km': [7.5,0.8955  ], '15km': [9.3,0.8898 ], '10Mile': [10.0,0.8898 ], '20km': [12.4,0.8898 ], 'H.Mar': [13.1,0.8898 ], '25km': [15.5, 0.8885], '30km': [18.6,0.8930 ], 'Marathon': [26.2,0.8906 ], '50km': [31.1, 0.8906], '50Mile': [50.0,0.8906 ], '100km': [62.1,0.8906 ], '150km': [93.2, 0.8906], '100Mile': [100.0,0.8906 ], '200km': [124.2,0.8906 ]},
+  
+    '50':{ '5km':[3.1,0.8937  ],'6km':[3.7, 0.8914],'4Mile':[4.0,0.8905 ],'8km':[5.0,0.8878 ],'5Mile':[5.0, 0.8877 ],'10km':[6.2, 0.8850],'12km':[7.5, 0.8850 ],'15km':[9.3, 0.8793],'10Mile':[10.0, 0.8793],'20km':[12.4,0.8793 ],'H.Mar':[13.1,0.8793 ],'25km':[15.5,0.8778 ],'30km':[18.6, 0.8822],'Marathon':[26.2,0.8796 ],'50km':[31.1, 0.8796],'50Mile':[50.0,0.8796 ], '100km':[62.1, 0.8796],'150km':[93.2, 0.8796],'100Mile':[100.0, 0.8796 ],'200km':[124.2, 0.8796]},
+  
+    '51':{ '5km':[3.1,0.8840 ],'6km':[3.7, 0.8815],'4Mile':[4.0, 0.8805],'8km':[5.0,0.8776 ],'5Mile':[5.0,0.8775  ],'10km':[6.2, 0.8745],'12km':[7.5,0.8688  ],'15km':[9.3,0.8688 ],'10Mile':[10.0, 0.8688],'20km':[12.4,0.8688 ],'H.Mar':[13.1, 0.8672],'25km':[15.5,0.8715 ],'30km':[18.6, 0.8686],'Marathon':[26.2, 0.8686],'50km':[31.1, 0.8686],'50Mile':[50.0,0.8686], '100km':[62.1,0.8686],'150km':[93.2,0.8686 ],'100Mile':[100.0,  0.8686],'200km':[124.2,0.8686 ]},
+  
+    '52':{ '5km':[3.1, 0.8743 ],'6km':[3.7,0.8716 ],'4Mile':[4.0, 0.8705],'8km':[5.0,0.8673 ],'5Mile':[5.0, 0.8672 ],'10km':[6.2,0.8640 ],'12km':[7.5, 0.8640 ],'15km':[9.3,0.8583 ],'10Mile':[10.0,0.8583 ],'20km':[12.4, 0.8583],'H.Mar':[13.1,0.8583 ],'25km':[15.5,0.8566 ],'30km':[18.6,0.8607 ],'Marathon':[26.2,0.8576 ],'50km':[31.1, 0.8576],'50Mile':[50.0, 0.8576], '100km':[62.1, 0.8576],'150km':[93.2, 0.8576],'100Mile':[100.0, 0.8576 ],'200km':[124.2, 0.8576]},
+  
+    '53':{ '5km':[3.1, 0.8645 ],'6km':[3.7,0.8616 ],'4Mile':[4.0, 0.8605],'8km':[5.0,0.8571 ],'5Mile':[5.0,0.8570  ],'10km':[6.2,0.8535 ],'12km':[7.5,0.8535  ],'15km':[9.3,0.8478 ],'10Mile':[10.0, 0.8478],'20km':[12.4,0.8478 ],'H.Mar':[13.1, 0.8478],'25km':[15.5,0.8460 ],'30km':[18.6,0.8500 ],'Marathon':[26.2,0.8466 ],'50km':[31.1, 0.8466],'50Mile':[50.0, 0.8466], '100km':[62.1, 0.8466],'150km':[93.2,0.8466 ],'100Mile':[100.0,  0.8466],'200km':[124.2, 0.8466]},
+  
+    '54':{ '5km':[3.1, 0.8548],'6km':[3.7,0.8517 ],'4Mile':[4.0, 0.8505],'8km':[5.0, 0.8468],'5Mile':[5.0, 0.8467 ],'10km':[6.2,0.8430 ],'12km':[7.5, 0.8430 ],'15km':[9.3, 0.8373],'10Mile':[10.0, 0.8373],'20km':[12.4,0.8373 ],'H.Mar':[13.1, 0.8373],'25km':[15.5, 0.8354],'30km':[18.6, 0.8392],'Marathon':[26.2,0.8356 ],'50km':[31.1,0.8356 ],'50Mile':[50.0,0.8356 ], '100km':[62.1, 0.8356],'150km':[93.2, 0.8356],'100Mile':[100.0, 0.8356 ],'200km':[124.2,0.8356 ]},
+    
+  
+    '55':{ '5km':[3.1,0.8451 ],'6km':[3.7, 0.8418],'4Mile':[4.0, 0.8405],'8km': [5.0,0.8366 ],'5Mile':[5.0, 0.8365 ],'10km':[6.2, 0.8325],'12km':[7.5, 0.8325 ],'15km':[9.3,0.8268 ],'10Mile':[10.0, 0.8268],'20km':[12.4, 0.8268],'H.Mar':[13.1, 0.8268],'25km':[15.5, 0.8247],'30km':[18.6, 0.8285],'Marathon':[26.2, 0.8246],'50km':[31.1,0.8246 ],'50Mile':[50.0, 0.8246], '100km':[62.1,0.8246],'150km':[93.2, ],'100Mile':[100.0,0.8246  ],'200km':[124.2, 0.8246]},
+  
+    '56':{ '5km':[3.1,0.8354 ],'6km':[3.7,0.8319 ],'4Mile':[4.0, 0.8305],'8km':[5.0, 0.8263],'5Mile':[5.0,0.8262  ],'10km':[6.2,0.8220 ],'12km':[7.5, 0.8220 ],'15km':[9.3, 0.8163],'10Mile':[10.0,0.8163 ],'20km':[12.4, 0.8163],'H.Mar':[13.1, 0.8163],'25km':[15.5, 0.8141],'30km':[18.6,0.8177 ],'Marathon':[26.2, ],'50km':[31.1,0.8136 ],'50Mile':[50.0, 0.8136], '100km':[62.1,0.8136 ],'150km':[93.2, 0.8136],'100Mile':[100.0, 0.8136 ],'200km':[124.2,0.8136 ]},
+  
+    '57':{ '5km':[3.1,0.8257 ],'6km':[3.7,0.8220 ],'4Mile':[4.0, 0.8205],'8km':[5.0, 0.8161],'5Mile':[5.0, 0.8160 ],'10km':[6.2,0.8115 ],'12km':[7.5, 0.8115 ],'15km':[9.3, 0.8058],'10Mile':[10.0, 0.8058],'20km':[12.4, 0.8058],'H.Mar':[13.1,0.8058 ],'25km':[15.5,0.8035 ],'30km':[18.6, 0.8070],'Marathon':[26.2,0.8026 ],'50km':[31.1, 0.8026],'50Mile':[50.0, 0.8026], '100km':[62.1, 0.8026],'150km':[93.2, 0.8026],'100Mile':[100.0, 0.8026 ],'200km':[124.2, 0.8026]},
+    
+  
+    '58':{ '5km':[3.1,0.8160 ],'6km':[3.7,0.8121 ],'4Mile':[4.0,0.8105 ],'8km':[5.0,0.8058 ],'5Mile':[5.0,  0.8057],'10km':[6.2, 0.8010],'12km':[7.5,0.8010  ],'15km':[9.3, 0.7953],'10Mile':[10.0, 0.7953],'20km':[12.4, 0.7953],'H.Mar':[13.1, 0.7953],'25km':[15.5, 0.7929],'30km':[18.6, 0.7962],'Marathon':[26.2,0.7916 ],'50km':[31.1, 0.7916],'50Mile':[50.0,0.7916 ], '100km':[62.1, 0.7916],'150km':[93.2, 0.7916],'100Mile':[100.0,  0.7916],'200km':[124.2, 0.7916]},
+  
+  
+    '59':{ '5km':[3.1, 0.8063],'6km':[3.7,0.8021 ],'4Mile':[4.0, 0.8005],'8km':[5.0, 0.7956],'5Mile':[5.0,0.7955  ],'10km':[6.2, 0.7905],'12km':[7.5,  0.7905],'15km':[9.3, 0.7848],'10Mile':[10.0, 0.7848],'20km':[12.4,0.7848 ],'H.Mar':[13.1,0.7848 ],'25km':[15.5,0.7822 ],'30km':[18.6,0.7855 ],'Marathon':[26.2,0.7806 ],'50km':[31.1,0.7806 ],'50Mile':[50.0,0.7806 ], '100km':[62.1, 0.7806],'150km':[93.2,0.7806 ],'100Mile':[100.0, 0.7806 ],'200km':[124.2,0.7806 ]},
+  
+    '60':{ '5km':[3.1,0.7966 ],'6km':[3.7, 0.7922],'4Mile':[4.0,0.7905 ],'8km':[5.0,0.7854 ],'5Mile':[5.0,  0.7852],'10km':[6.2,0.7800 ],'12km':[7.5,  0.7800],'15km':[9.3,0.7743 ],'10Mile':[10.0,0.7743 ],'20km':[12.4, 0.7743],'H.Mar':[13.1, 0.7743],'25km':[15.5,0.7716 ],'30km':[18.6, 0.7747],'Marathon':[26.2, 0.7696],'50km':[31.1, 0.7696],'50Mile':[50.0, 0.7696], '100km':[62.1, 0.7696],'150km':[93.2,0.7696 ],'100Mile':[100.0,  0.7696],'200km':[124.2, 0.7696]},
+  
+    '61':{ '5km':[3.1,0.7869 ],'6km':[3.7,0.7823 ],'4Mile':[4.0, 0.7805],'8km':[5.0,0.7751 ],'5Mile':[5.0, 0.7750 ],'10km':[6.2, 0.7695],'12km':[7.5, 0.7695 ],'15km':[9.3, 0.7638],'10Mile':[10.0, 0.7638],'20km':[12.4,0.7638 ],'H.Mar':[13.1, 0.7638],'25km':[15.5,0.7610 ],'30km':[18.6, 0.7640],'Marathon':[26.2, 0.7586],'50km':[31.1, 0.7586],'50Mile':[50.0,0.7586 ], '100km':[62.1,0.7586],'150km':[93.2, 0.7586],'100Mile':[100.0,0.7586  ],'200km':[124.2,0.7586 ]},
+  
+    '62':{ '5km':[3.1,0.7772 ],'6km':[3.7,0.7724 ],'4Mile':[4.0, 0.7705],'8km':[5.0,0.7649 ],'5Mile':[5.0, 0.7647 ],'10km':[6.2,0.7590 ],'12km':[7.5, 0.7590 ],'15km':[9.3,0.7533 ],'10Mile':[10.0, 0.7533],'20km':[12.4,0.7533 ],'H.Mar':[13.1, 0.7533],'25km':[15.5, 0.7504],'30km':[18.6,0.7532 ],'Marathon':[26.2, 0.7476],'50km':[31.1,0.7476 ],'50Mile':[50.0,0.7476], '100km':[62.1,0.7476 ],'150km':[93.2,0.7476 ],'100Mile':[100.0,  0.7476],'200km':[124.2, 0.7476]},
+  
+    '63':{ '5km':[3.1,0.7674 ],'6km':[3.7, 0.7625],'4Mile':[4.0, 0.7605],'8km':[5.0, 0.7546],'5Mile':[5.0, 0.7545 ],'10km':[6.2,0.7485 ],'12km':[7.5,0.7485  ],'15km':[9.3, 0.7428],'10Mile':[10.0,0.7428 ],'20km':[12.4,0.7428 ],'H.Mar':[13.1, 0.7428],'25km':[15.5, 0.7398],'30km':[18.6,0.7424 ],'Marathon':[26.2, 0.7366],'50km':[31.1, 0.7366],'50Mile':[50.0, 0.7366], '100km':[62.1, 0.7366],'150km':[93.2, 0.7366, ],'100Mile':[100.0, 0.7366 ],'200km':[124.2, 0.7366]},
+  
+    '64':{ '5km':[3.1,  0.7577],'6km':[3.7, 0.7526],'4Mile':[4.0, 0.7506],'8km':[5.0, 0.7444],'5Mile':[5.0, 0.7442 ],'10km':[6.2, 0.7380],'12km':[7.5, 0.7380 ],'15km':[9.3, 0.7323],'10Mile':[10.0,0.7323 ],'20km':[12.4, 0.7323],'H.Mar':[13.1, 0.7323],'25km':[15.5, 0.7291],'30km':[18.6, 0.7317],'Marathon':[26.2,0.7256 ],'50km':[31.1, 0.7256],'50Mile':[50.0,0.7256 ], '100km':[62.1, 0.7256],'150km':[93.2, 0.7256],'100Mile':[100.0, 0.7256 ],'200km':[124.2, 0.7256]},
+    
+  
+    '65':{ '5km':[3.1,0.7480 ],'6km':[3.7, 0.7426],'4Mile':[4.0, 0.7406],'8km':[5.0,0.7341],'5Mile':[5.0,  0.7340 ],'10km':[6.2,0.7275 ],'12km':[7.5, 0.7275 ],'15km':[9.3,0.7218 ],'10Mile':[10.0, 0.7218],'20km':[12.4,0.7218 ],'H.Mar':[13.1,0.7218 ],'25km':[15.5, 0.7185],'30km':[18.6, 0.7209],'Marathon':[26.2, 0.7146],'50km':[31.1,0.7146 ],'50Mile':[50.0,0.7146 ], '100km':[62.1,0.7146 ],'150km':[93.2,0.7146 ],'100Mile':[100.0,0.7146  ],'200km':[124.2, 0.7146]},
+  
+  
+    '66':{ '5km':[3.1, 0.7383],'6km':[3.7, 0.7327],'4Mile':[4.0, 0.7306],'8km':[5.0,0.7239 ],'5Mile':[5.0, 0.7237 ],'10km':[6.2, 0.7170],'12km':[7.5, 0.7170 ],'15km':[9.3,0.7113 ],'10Mile':[10.0,0.7113 ],'20km':[12.4,0.7113 ],'H.Mar':[13.1,0.7113 ],'25km':[15.5, 0.7079],'30km':[18.6,0.7102 ],'Marathon':[26.2, 0.7036],'50km':[31.1,0.7036 ],'50Mile':[50.0,0.7036 ], '100km':[62.1,0.7036 ],'150km':[93.2, 0.7036],'100Mile':[100.0, 0.7036 ],'200km':[124.2,0.7036 ]},
+  
+    '67':{ '5km':[3.1,0.7286 ],'6km':[3.7, 0.7228],'4Mile':[4.0, 0.7206],'8km':[5.0,0.7136 ],'5Mile':[5.0, 0.7134 ],'10km':[6.2,0.7065 ],'12km':[7.5,  0.7065],'15km':[9.3, 0.7008],'10Mile':[10.0,0.7008 ],'20km':[12.4, 0.7008],'H.Mar':[13.1,0.7008 ],'25km':[15.5,0.6973 ],'30km':[18.6,0.6994 ],'Marathon':[26.2, ],'50km':[31.1,0.6926 ],'50Mile':[50.0, 0.6926], '100km':[62.1, 0.6926],'150km':[93.2, 0.6926],'100Mile':[100.0,0.6926  ],'200km':[124.2,0.6926 ]},
+  
+    
+  
+    '68':{ '5km':[3.1, ],'6km':[3.7, ],'4Mile':[4.0, ],'8km':[5.0, ],'5Mile':[5.0,  ],'10km':[6.2, ],'12km':[7.5,  ],'15km':[9.3, ],'10Mile':[10.0, ],'20km':[12.4, ],'H.Mar':[13.1, ],'25km':[15.5, ],'30km':[18.6, ],'Marathon':[26.2, ],'50km':[31.1, ],'50Mile':[50.0, ], '100km':[62.1, ],'150km':[93.2, ],'100Mile':[100.0,  ],'200km':[124.2, ]},
+  
+    '69':{ '5km':[3.1,0.7092 ],'6km':[3.7, 0.7030],'4Mile':[4.0,0.7006 ],'8km':[5.0, 0.6931],'5Mile':[5.0, 0.6929,  ],'10km':[6.2,0.6855 ],'12km':[7.5,0.6855  ],'15km':[9.3, 0.6798],'10Mile':[10.0,0.6798 ],'20km':[12.4,0.6798 ],'H.Mar':[13.1,0.6798 ],'25km':[15.5,0.6760 ],'30km':[18.6,0.6779 ],'Marathon':[26.2,0.6706 ],'50km':[31.1,0.6706 ],'50Mile':[50.0, 0.6706], '100km':[62.1,0.6706 ],'150km':[93.2, 0.6706],'100Mile':[100.0, 0.6706 ],'200km':[124.2, 0.6706]},
+  
+    '70':{ '5km':[3.1, 0.6995],'6km':[3.7,0.6930 ],'4Mile':[4.0, 0.6906],'8km':[5.0, 0.6829],'5Mile':[5.0, 0.6827 ],'10km':[6.2, 0.6750, ],'12km':[7.5, 0.6750 ],'15km':[9.3, 0.6693],'10Mile':[10.0,0.6693 ],'20km':[12.4, 0.6693],'H.Mar':[13.1, 0.6693],'25km':[15.5,0.6654 ],'30km':[18.6,0.6672 ],'Marathon':[26.2,0.6596 ],'50km':[31.1,0.6596 ],'50Mile':[50.0, 0.6596], '100km':[62.1,0.6596 ],'150km':[93.2, 0.6596],'100Mile':[100.0,0.6596],'200km':[124.2, 0.6596]},
+  
+  
+    '71':{ '5km':[3.1,0.6898 ],'6km':[3.7,0.6831 ],'4Mile':[4.0, 0.6806],'8km':[5.0,0.6727 ],'5Mile':[5.0,0.6724  ],'10km':[6.2,0.6645 ],'12km':[7.5,  0.6645],'15km':[9.3,0.6588 ],'10Mile':[10.0, 0.6588],'20km':[12.4, 0.6588],'H.Mar':[13.1,0.6588 ],'25km':[15.5,0.6548 ],'30km':[18.6,0.6564 ],'Marathon':[26.2, 0.6486],'50km':[31.1,0.6486 ],'50Mile':[50.0, 0.6486], '100km':[62.1, 0.6486],'150km':[93.2, 0.6486],'100Mile':[100.0, 0.6486 ],'200km':[124.2,0.6486 ]},
+  
+    '72':{ '5km':[3.1,0.6801 ],'6km':[3.7,0.6732 ],'4Mile':[4.0, 0.6706],'8km':[5.0, 0.6624],'5Mile':[5.0, 0.6622 ],'10km':[6.2,0.6540 ],'12km':[7.5, 0.6540 ],'15km':[9.3, 0.6483],'10Mile':[10.0,0.6483 ],'20km':[12.4,0.6483 ],'H.Mar':[13.1, 0.6483],'25km':[15.5, 0.6441],'30km':[18.6,0.6457 ],'Marathon':[26.2,0.6376 ],'50km':[31.1, 0.6376],'50Mile':[50.0,0.6376 ], '100km':[62.1, 0.6376],'150km':[93.2,0.6376 ],'100Mile':[100.0, 0.6376 ],'200km':[124.2, 0.6376]},
+  
+    '73':{ '5km':[3.1, 0.6703],'6km':[3.7, 0.6633],'4Mile':[4.0,0.6606 ],'8km':[5.0,0.6522 ],'5Mile':[5.0, 0.6519 ],'10km':[6.2, 0.6435],'12km':[7.5, 0.6435 ],'15km':[9.3, 0.6378],'10Mile':[10.0, 0.6378],'20km':[12.4, 0.6378],'H.Mar':[13.1,0.6378 ],'25km':[15.5, 0.6335],'30km':[18.6,0.6349 ],'Marathon':[26.2,0.6266 ],'50km':[31.1,0.6266 ],'50Mile':[50.0, 0.6266], '100km':[62.1,0.6266 ],'150km':[93.2, 0.6266],'100Mile':[100.0, 0.6266 ],'200km':[124.2,0.6266 ]},
+  
+    '74':{ '5km':[3.1, 0.6606],'6km':[3.7, 0.6534],'4Mile':[4.0,0.6506 ],'8km':[5.0, 0.6419],'5Mile':[5.0,0.6417  ],'10km':[6.2,0.6330 ],'12km':[7.5,  ],'15km':[9.3, 0.6273],'10Mile':[10.0, 0.6273],'20km':[12.4, 0.6273],'H.Mar':[13.1,0.6273 ],'25km':[15.5, 0.6229],'30km':[18.6,0.6241, ],'Marathon':[26.2,0.6156 ],'50km':[31.1, 0.6156],'50Mile':[50.0,0.6156 ], '100km':[62.1, 0.6156],'150km':[93.2, 0.6156],'100Mile':[100.0,0.6156  ],'200km':[124.2, 0.6156]},
+    
+  
+    '75':{ '5km':[3.1,0.6509 ],'6km':[3.7,0.6435 ],'4Mile':[4.0, 0.6406],'8km':[5.0,0.6317 ],'5Mile':[5.0, 0.6314 ],'10km':[6.2,0.6225 ],'12km':[7.5, 0.6225 ],'15km':[9.3, 0.6168],'10Mile':[10.0,0.6168 ],'20km':[12.4, 0.6168],'H.Mar':[13.1, 0.6168],'25km':[15.5, 0.6123],'30km':[18.6,0.6133 ],'Marathon':[26.2, 0.6042],'50km':[31.1,0.6042 ],'50Mile':[50.0,0.6042 ], '100km':[62.1,0.6042 ],'150km':[93.2,0.6042 ],'100Mile':[100.0,0.6042  ],'200km':[124.2,0.6042]},
+  
+    '76':{ '5km':[3.1,0.6412 ],'6km':[3.7, 0.6335],'4Mile':[4.0, 0.6306],'8km':[5.0,0.6214 ],'5Mile':[5.0, 0.6212 ],'10km':[6.2, 0.6120],'12km':[7.5, 0.6120 ],'15km':[9.3, 0.6063],'10Mile':[10.0, 0.6063],'20km':[12.4,0.6060 ],'H.Mar':[13.1,0.6059 ],'25km':[15.5, 0.6011],'30km':[18.6,0.6018 ],'Marathon':[26.2,0.5920 ],'50km':[31.1,0.5920 ],'50Mile':[50.0,0.5920 ], '100km':[62.1, 0.5920],'150km':[93.2,0.5920 ],'100Mile':[100.0, 0.5920 ],'200km':[124.2,0.5920 ]},
+  
+    '77':{ '5km':[3.1,0.6315 ],'6km':[3.7, 0.6206],'4Mile':[4.0,0.6112 ],'8km':[5.0, 0.6109],'5Mile':[5.0, 0.6015 ],'10km':[6.2, 0.6015],'12km':[7.5,  0.6015],'15km':[9.3,0.5956 ],'10Mile':[10.0,0.5954 ],'20km':[12.4,0.5945 ],'H.Mar':[13.1,0.5942 ],'25km':[15.5, 0.5891, ],'30km':[18.6, 0.5894],'Marathon':[26.2,0.5790 ],'50km':[31.1,0.5790 ],'50Mile':[50.0,0.5790 ], '100km':[62.1, 0.5790],'150km':[93.2, 0.5790],'100Mile':[100.0,0.5790  ],'200km':[124.2,0.5790 ]},
+    
+  
+    '78':{ '5km':[3.1,0.6218 ],'6km':[3.7,0.6137 ],'4Mile':[4.0,0.6106 ],'8km':[5.0, 0.6009],'5Mile':[5.0, 0.6007 ],'10km':[6.2,0.5910 ],'12km':[7.5, 0.5908 ],'15km':[9.3, 0.5841],'10Mile':[10.0, 0.5837],'20km':[12.4,0.5823 ],'H.Mar':[13.1, 0.5818],'25km':[15.5,0.5764 ],'30km':[18.6, 0.5763],'Marathon':[26.2,0.5652, ],'50km':[31.1, 0.5652],'50Mile':[50.0,0.5652 ], '100km':[62.1, 0.5652],'150km':[93.2, 0.5652],'100Mile':[100.0,0.5652  ],'200km':[124.2, 0.5652]},
+  
+  
+    '79':{ '5km':[3.1, 0.6120],'6km':[3.7, 0.6036],'4Mile':[4.0, 0.6036],'8km':[5.0, 0.6004],'5Mile':[5.0,  0.5904],'10km':[6.2, 0.5901],'12km':[7.5,  0.5801],'15km':[9.3, 0.5792],'10Mile':[10.0, 0.5713],'20km':[12.4, 0.5692],'H.Mar':[13.1, 0.5687],'25km':[15.5, 0.5629],'30km':[18.6,0.5625 ],'Marathon':[26.2, 0.5506],'50km':[31.1,0.5506 ],'50Mile':[50.0, 0.5506], '100km':[62.1, 0.5506],'150km':[93.2, 0.5506],'100Mile':[100.0, 0.5506 ],'200km':[124.2,0.5506 ]},
+  
+  
+    '80':{ '5km':[3.1,0.6013 ],'6km':[3.7, 0.5926],'4Mile':[4.0,0.5893 ],'8km':[5.0,0.5788 ],'5Mile':[5.0,  0.5786],'10km':[6.2,0.5681 ],'12km':[7.5, 0.5667 ],'15km':[9.3, 0.5587],'10Mile':[10.0,0.5579 ],'20km':[12.4,0.5554 ],'H.Mar':[13.1,0.5548 ],'25km':[15.5,0.5486 ],'30km':[18.6, 0.5478],'Marathon':[26.2,0.5352 ],'50km':[31.1,0.5352 ],'50Mile':[50.0,0.5352 ], '100km':[62.1,0.5352 ],'150km':[93.2,0.5352 ],'100Mile':[100.0, 0.5352 ],'200km':[124.2,0.5352 ]},
+  
+    '81':{ '5km':[3.1,0.5897 ],'6km':[3.7,0.5807 ],'4Mile':[4.0,0.5772 ],'8km':[5.0, 0.5664],'5Mile':[5.0,0.5661  ],'10km':[6.2,0.5553 ],'12km':[7.5, 0.5533 ],'15km':[9.3, 0.5447],'10Mile':[10.0, 0.5438],'20km':[12.4,0.5408 ],'H.Mar':[13.1,0.5401],'25km':[15.5,0.5335 ],'30km':[18.6,0.5323 ],'Marathon':[26.2,0.5190 ],'50km':[31.1,0.5190 ],'50Mile':[50.0,0.5190 ], '100km':[62.1, 0.5190],'150km':[93.2,0.5190 ],'100Mile':[100.0, 0.5190 ],'200km':[124.2,0.5190 ]},
+  
+  
+    '82':{ '5km':[3.1,0.5772 ],'6km':[3.7,0.5678 ],'4Mile':[4.0, 0.5642],'8km':[5.0,0.5530 ],'5Mile':[5.0,  0.5527],'10km':[6.2, 0.5415],'12km':[7.5, 0.5390 ],'15km':[9.3,0.5299 ],'10Mile':[10.0,0.5288 ],'20km':[12.4, 0.5255, ],'H.Mar':[13.1, 0.5246],'25km':[15.5,0.5177 ],'30km':[18.6, 0.5161],'Marathon':[26.2, 0.5020],'50km':[31.1, 0.5020],'50Mile':[50.0,0.5020], '100km':[62.1,0.5020 ],'150km':[93.2,0.5020 ],'100Mile':[100.0, 0.5020 ],'200km':[124.2, 0.5020]},
+  
+    '83':{ '5km':[3.1,0.5637 ],'6km':[3.7,0.5540 ],'4Mile':[4.0,0.5503 ],'8km':[5.0, 0.5387],'5Mile':[5.0,  ],'10km':[6.2, 0.5268],'12km':[7.5, 0.5238 ],'15km':[9.3, 0.5142],'10Mile':[10.0, 0.5130],'20km':[12.4,0.5093],'H.Mar':[13.1, 0.5084],'25km':[15.5,0.5011 ],'30km':[18.6, 0.4991],'Marathon':[26.2,0.4842 ],'50km':[31.1,0.4842 ],'50Mile':[50.0, 0.4842], '100km':[62.1, 0.4842],'150km':[93.2, 0.4842],'100Mile':[100.0, 0.4842 ],'200km':[124.2, 0.4842]},
+  
+    '84':{ '5km':[3.1,0.5493 ],'6km':[3.7,0.5393],'4Mile':[4.0,0.5354 ],'8km':[5.0,0.5234 ],'5Mile':[5.0,0.5231],'10km':[6.2, 0.5111],'12km':[7.5,  0.5077],'15km':[9.3, 0.4977],'10Mile':[10.0, 0.4964],'20km':[12.4, 0.4924],'H.Mar':[13.1, 0.4915],'25km':[15.5, 0.4838],'30km':[18.6,0.4813 ],'Marathon':[26.2,0.4656 ],'50km':[31.1,0.4656 ],'50Mile':[50.0, 0.4656], '100km':[62.1,0.4656 ],'150km':[93.2, 0.4656],'100Mile':[100.0,  0.4656],'200km':[124.2,0.4656 ]},
+    
+  
+    '85':{ '5km':[3.1,0.5340 ],'6km':[3.7, 0.5236],'4Mile':[4.0, 0.5196],'8km':[5.0,0.5072 ],'5Mile':[5.0, 0.5069 ],'10km':[6.2, 0.4945],'12km':[7.5, 0.4907 ],'15km':[9.3,0.4804 ],'10Mile':[10.0, 0.4790],'20km':[12.4,0.4747 ],'H.Mar':[13.1, 0.4738],'25km':[15.5,0.4657],'30km':[18.6, 0.4628],'Marathon':[26.2,0.4462 ],'50km':[31.1, 0.4462],'50Mile':[50.0, 0.4462], '100km':[62.1,0.4462 ],'150km':[93.2, 0.4462],'100Mile':[100.0, 0.4462 ],'200km':[124.2, 0.4260]},
+  
+    '86':{ '5km':[3.1,0.5177 ],'6km':[3.7, 0.5070],'4Mile':[4.0,0.5029 ],'8km':[5.0, 0.4901],'5Mile':[5.0, 0.4897 ],'10km':[6.2, 0.4769],'12km':[7.5, 0.4729 ],'15km':[9.3, 0.4622],'10Mile':[10.0,0.4607 ],'20km':[12.4,0.4563 ],'H.Mar':[13.1,0.4553 ],'25km':[15.5,0.4468 ],'30km':[18.6,0.4434 ],'Marathon':[26.2, 0.4260],'50km':[31.1, 0.4260],'50Mile':[50.0,0.4260 ], '100km':[62.1,0.4260 ],'150km':[93.2,0.4260 ],'100Mile':[100.0,  0.4260],'200km':[124.2, 0.4260]},
+  
+    '87':{ '5km':[3.1, 0.5004],'6km':[3.7,0.4894 ],'4Mile':[4.0,0.4852 ],'8km':[5.0, 0.4720],'5Mile':[5.0, 0.4716 ],'10km':[6.2, 0.4585],'12km':[7.5,0.4541  ],'15km':[9.3,0.4432 ],'10Mile':[10.0, 0.4416],'20km':[12.4,0.4371 ],'H.Mar':[13.1,0.4360 ],'25km':[15.5,0.4271 ],'30km':[18.6, 0.4233],'Marathon':[26.2,0.4050 ],'50km':[31.1, 0.4050],'50Mile':[50.0, 0.4050], '100km':[62.1,0.4050 ],'150km':[93.2,0.4050 ],'100Mile':[100.0,0.4050  ],'200km':[124.2,0.4050 ]},
+    
+  
+    '88':{ '5km':[3.1,0.4823 ],'6km':[3.7,0.4709 ],'4Mile':[4.0, 0.4665],'8km':[5.0,0.4530 ],'5Mile':[5.0,  0.4526],'10km':[6.2, 0.4390],'12km':[7.5, 0.4344 ],'15km':[9.3, 0.4233],'10Mile':[10.0, 0.4217],'20km':[12.4, 0.4171],'H.Mar':[13.1,0.4160 ],'25km':[15.5,0.4067 ],'30km':[18.6, 0.4024],'Marathon':[26.2, 0.3832],'50km':[31.1,0.3832 ],'50Mile':[50.0, 0.3832], '100km':[62.1,0.3832 ],'150km':[93.2, 0.3832],'100Mile':[100.0,0.3832  ],'200km':[124.2,0.3832 ]},
+  
+  
+    '89':{ '5km':[3.1, 0.4632],'6km':[3.7,0.4515 ],'4Mile':[4.0, 0.4470],'8km':[5.0,0.4330 ],'5Mile':[5.0, 0.4326 ],'10km':[6.2, 0.4187],'12km':[7.5, 0.4139,  ],'15km':[9.3,0.4026 ],'10Mile':[10.0,0.4010 ],'20km':[12.4, 0.3963],'H.Mar':[13.1,0.3953 ],'25km':[15.5, 0.3855],'30km':[18.6, 0.3807, ],'Marathon':[26.2,0.3606 ],'50km':[31.1, 0.3606],'50Mile':[50.0,0.3606 ], '100km':[62.1, 0.3606],'150km':[93.2, 0.3606],'100Mile':[100.0,0.3606  ],'200km':[124.2,0.3606 ]},
+  
+  
+    '90':{ '5km':[3.1,0.4431 ],'6km':[3.7,0.4311 ],'4Mile':[4.0,0.4265 ],'8km':[5.0, 0.4121],'5Mile':[5.0,  0.4117],'10km':[6.2,0.3973 ],'12km':[7.5,0.3924  ],'15km':[9.3, 0.3810],'10Mile':[10.0,0.3794 ],'20km':[12.4,0.3748 ],'H.Mar':[13.1, 0.3738],'25km':[15.5, 0.3635],'30km':[18.6,0.3583 ],'Marathon':[26.2, 0.3372],'50km':[31.1,0.3372 ],'50Mile':[50.0,0.3372 ], '100km':[62.1,0.3372 ],'150km':[93.2,0.3372 ],'100Mile':[100.0, 0.3372 ],'200km':[124.2, ]},
+  
+  
+  
+    '91':{ '5km':[3.1,0.4221 ],'6km':[3.7,0.4098 ],'4Mile':[4.0, 0.4050],'8km':[5.0, 0.3903],'5Mile':[5.0,0.3899  ],'10km':[6.2, 0.3751],'12km':[7.5, 0.3700 ],'15km':[9.3, 0.3586],'10Mile':[10.0,0.3570 ],'20km':[12.4,0.3525 ],'H.Mar':[13.1,0.3515 ],'25km':[15.5, 0.3407],'30km':[18.6,0.3350 ],'Marathon':[26.2,0.3130 ],'50km':[31.1, 0.3130],'50Mile':[50.0,0.3130 ], '100km':[62.1,0.3130 ],'150km':[93.2, 0.3130],'100Mile':[100.0, 0.3130 ],'200km':[124.2, 0.3130]},
+    
+    '92':{ '5km':[3.1, 0.4002 ],'6km':[3.7,0.3875 ],'4Mile':[4.0,0.3826 ],'8km':[5.0, 0.3675],'5Mile':[5.0,  0.3671],'10km':[6.2,0.3519 ],'12km':[7.5,0.3468  ],'15km':[9.3, 0.3354],'10Mile':[10.0, 0.3338],'20km':[12.4,0.3294, ],'H.Mar':[13.1,0.3284, ],'25km':[15.5,0.3172 ],'30km':[18.6, 0.3110],'Marathon':[26.2, 0.2880],'50km':[31.1, 0.2880],'50Mile':[50.0, 0.2880], '100km':[62.1, 0.2880],'150km':[93.2,0.2880 ],'100Mile':[100.0,  0.2880],'200km':[124.2,0.2880]},
+  
+  
+    '93':{ '5km':[3.1,0.3773 ],'6km':[3.7, 0.3593],'4Mile':[4.0, 0.3438],'8km':[5.0, 0.3433],'5Mile':[5.0,0.3278  ],'10km':[6.2, 0.3226],'12km':[7.5, 0.3226 ],'15km':[9.3, 0.3113],'10Mile':[10.0, 0.3097],'20km':[12.4,0.3055 ],'H.Mar':[13.1,0.3046 ],'25km':[15.5, 0.2930],'30km':[18.6, 0.2862],'Marathon':[26.2, 0.2622, ],'50km':[31.1,0.2622 ],'50Mile':[50.0, 0.2622], '100km':[62.1, 0.2622],'150km':[93.2, 0.2622],'100Mile':[100.0,  0.2622],'200km':[124.2,0.2622 ]},
+  
+  
+  
+    '94':{ '5km':[3.1,0.3535 ],'6km':[3.7, 0.3350],'4Mile':[4.0, 0.3191],'8km':[5.0,0.3187 ],'5Mile':[5.0, 0.3027 ],'10km':[6.2,0.3027 ],'12km':[7.5,0.2976  ],'15km':[9.3, 0.2864],'10Mile':[10.0,0.2849 ],'20km':[12.4, 0.2809],'H.Mar':[13.1, 0.2801],'25km':[15.5,0.2679 ],'30km':[18.6, 0.2606],'Marathon':[26.2,0.2356 ],'50km':[31.1,0.2356 ],'50Mile':[50.0, 0.2356], '100km':[62.1, 0.2356],'150km':[93.2,0.2356 ],'100Mile':[100.0,0.2356  ],'200km':[124.2,0.2356 ]},
+    
+  
+    '95':{ '5km':[3.1,0.3288 ],'6km':[3.7, 0.3151],'4Mile':[4.0, 0.3098],'8km':[5.0,0.2935 ],'5Mile':[5.0,  0.2930],'10km':[6.2,0.2767 ],'12km':[7.5,0.2716  ],'15km':[9.3,0.2606 ],'10Mile':[10.0, 0.2592],'20km':[12.4,0.2555 ],'H.Mar':[13.1, 0.2548],'25km':[15.5, 0.2421],'30km':[18.6, 0.2342],'Marathon':[26.2,0.2082 ],'50km':[31.1,0.2082 ],'50Mile':[50.0, 0.2082], '100km':[62.1,0.2082 ],'150km':[93.2, 0.2082],'100Mile':[100.0, 0.2082 ],'200km':[124.2,0.2082 ]},
+  
+    '96':{ '5km':[3.1, 0.3031],'6km':[3.7, 0.2891],'4Mile':[4.0, 0.2837],'8km':[5.0,0.2669 ],'5Mile':[5.0,  0.2665],'10km':[6.2,0.2497 ],'12km':[7.5, 0.2448 ],'15km':[9.3, 0.2340],'10Mile':[10.0, 0.2326],'20km':[12.4, 0.2293],'H.Mar':[13.1,0.2287 ],'25km':[15.5,0.2155 ],'30km':[18.6,0.2071 ],'Marathon':[26.2,0.1800],'50km':[31.1,0.1800 ],'50Mile':[50.0,0.1800 ], '100km':[62.1,0.1800 ],'150km':[93.2, 0.1800],'100Mile':[100.0,0.1800  ],'200km':[124.2,0.1800 ]},
+  
+    '97':{ '5km':[3.1, 0.2764],'6km':[3.7,0.2621 ],'4Mile':[4.0,0.2566 ],'8km':[5.0, 0.2395],'5Mile':[5.0, 0.2390 ],'10km':[6.2,0.2219 ],'12km':[7.5, 0.2171 ],'15km':[9.3, 0.2065],'10Mile':[10.0, 0.2053],'20km':[12.4,0.2023 ],'H.Mar':[13.1, 0.2018],'25km':[15.5,0.1881 ],'30km':[18.6,0.1792 ],'Marathon':[26.2,0.1510 ],'50km':[31.1,0.1510 ],'50Mile':[50.0,0.1510 ], '100km':[62.1,0.1510 ],'150km':[93.2, 0.1510],'100Mile':[100.0,0.1510  ],'200km':[124.2, 0.1510]},
+    
+    '98':{ '5km':[3.1,0.2489 ],'6km':[3.7,0.2342 ],'4Mile':[4.0, 0.2285],'8km':[5.0,0.2110 ],'5Mile':[5.0,  0.2106],'10km':[6.2,0.1930 ],'12km':[7.5, 0.1884 ],'15km':[9.3, 0.1782],'10Mile':[10.0, ],'20km':[12.4, 0.1746],'H.Mar':[13.1,0.1742 ],'25km':[15.5,0.1600 ],'30km':[18.6, 0.1504],'Marathon':[26.2,0.1212 ],'50km':[31.1, 0.1212],'50Mile':[50.0,0.1212 ], '100km':[62.1,0.1212 ],'150km':[93.2,0.1212 ],'100Mile':[100.0,  0.1212],'200km':[124.2, 0.1212]},
+  
+  
+    '99':{ '5km':[3.1, 0.2204],'6km':[3.7, 0.2054],'4Mile':[4.0,0.1996 ],'8km':[5.0,0.1817 ],'5Mile':[5.0, 0.1812 ],'10km':[6.2, 0.1633],'12km':[7.5,0.1589  ],'15km':[9.3, 0.1491],'10Mile':[10.0,0.1481 ],'20km':[12.4,0.1461 ],'H.Mar':[13.1,0.1459 ],'25km':[15.5, 0.1311],'30km':[18.6, 0.1210],'Marathon':[26.2,0.0906 ],'50km':[31.1,0.0906 ],'50Mile':[50.0, 0.0906], '100km':[62.1, 0.0906],'150km':[93.2,0.0906 ],'100Mile':[100.0,0.0906  ],'200km':[124.2,0.0906 ]},
+  
+    '100':{ '5km':[3.1,0.1909 ],'6km':[3.7, 0.1756],'4Mile':[4.0,0.1697 ],'8km':[5.0, 0.1514],'5Mile':[5.0, 0.1509 ],'10km':[6.2,0.1325 ],'12km':[7.5,0.1285  ],'15km':[9.3,0.1191 ],'10Mile':[10.0,0.1183 ],'20km':[12.4, 0.1169],'H.Mar':[13.1, 0.1168],'25km':[15.5, 0.1014],'30km':[18.6,0.0907 ],'Marathon':[26.2, 0.0592],'50km':[31.1, 0.0592],'50Mile':[50.0, 0.0592], '100km':[62.1, 0.0592],'150km':[93.2, 0.0592],'100Mile':[100.0, 0.0592 ],'200km':[124.2, 0.0592]},
+  
+  
+  
+  };
+  
+  // ----------Functions----------------------------------------------------------------
+  
+  // var gender; // gender male/female from user input
+  // var ages = new Array(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100);
+  var pAGP; // AG% of past race time, calculated/ assinged to function AGCalc
+  var gender;
+  // var womens = {
+  //   OC:{'5km': [3.1, 886]},
+  //   '50': {'5km':[3.1, 0.8937],	
+  //   '6km':[6, 0.8914]},
+  //   '60': {'5km':[5, 0.77], 
+  //   '6km' :[6, .777]}
+  // };
+  //console.log("world record time: " + womens.OC['5km'][1]); //this now returns 886 🙌
+  function AGCalc (gender, age, distance, ageRunTime, globals) {
+  age = parseFloat(age), ageRunTime = parseFloat(ageRunTime);
+  if (gender === 'm'){
+    var offset = mens[age][distance][1];
+    var AGadj = (mens['OC'][distance][1])/offset;
+    globals = AGadj/ageRunTime;
+  }
+  if (gender === 'f'){
+    var offset = womens[age][distance][1];
+    var AGadj = (womens['OC'][distance][1])/offset;
+    globals = AGadj/ageRunTime;
+  }
+   return globals;
+   
+  }
+  console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
+   AGCalc('f', 50, '5km', 2000);
+  
+  
+  
+  
+  
+  
+    // End of Document.ready
+  });
+  
