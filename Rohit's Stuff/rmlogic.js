@@ -9,6 +9,7 @@ function locationInput(){
     function geocode() {
 
       // Input of location from User
+      // If then Statement.  If Input of Current Location is empty, then run the following, if not Alert the user. Reset the Field first before proceeding.
       var location = $("#current-location").val();
       // Turn location into City and State.
       axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
@@ -73,11 +74,11 @@ function locationInput(){
     // console.log(currentWs);
 
     // Appending weather info onto DOM
-    $("#today-temp").append("<div class= 'todayTemp'>" + currentTemp + "</div>");
+    $("#today-temp").empty().append("<div class= 'todayTemp'>" + currentTemp + "</div>");
 
-    $("#today-hum").append("<div class= 'todayHum'>" + currentHum + "</div>");
+    $("#today-hum").empty().append("<div class= 'todayHum'>" + currentHum + "</div>");
 
-    $("#today-ws").append("<div class= 'todayWs'>" + currentWs + "</div>");
+    $("#today-ws").empty().append("<div class= 'todayWs'>" + currentWs + "</div>");
 
 
 
