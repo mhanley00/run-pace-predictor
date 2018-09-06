@@ -93,34 +93,34 @@
       <div class="row">
 
       <div class="input-field col s4 m4 l4">
-        <input placeholder="00" id="race-time-hours" type="text" class="validate">
-        <label for="race-time-hours">Hour(s)</label>
+        <input placeholder="00" id="p-run-hours" type="text" class="validate"maxlength="3">
+        <label for="p-run-hours">Hour(s)</label>
       </div>
       <div class="input-field col s4 m4 l4">
-        <input placeholder="00" id="race-time-hours" type="text" class="validate">
-        <label for="race-time-minutes">Minute(s)</label>
+        <input placeholder="00" id="p-run-mins" type="text" class="validate" maxlength="2">
+        <label for="p-run-mins">Minute(s)</label>
       </div>
       <div class="input-field col s4 m4 l4">
-        <input placeholder="00" id="race-time-seconds" type="text" class="validate">
-        <label for="race-time-seconds">Second(s)</label>
+        <input placeholder="00" id="p-run-secs" type="text" class="validate"maxlength="2">
+        <label for="p-run-secs">Second(s)</label>
       </div>
       <!-- End Race time info -->
       <div class="row">
       <div class="input-field col s3 m3 l3">
-        <input placeholder="Race Distance" id="race-distance" type="text" class="validate">
-        <label for="race-distance">Enter Race Distance</label>
+        <input placeholder="00 " id="p-run-dist" type="text" class="validate" maxlength="3">
+        <label for="p-run-dist"> Race Distance (Miles)</label>
       </div>
       <div class="input-field col s3 m3 l3">
-        <input placeholder="Race Distance" id="race-humidity" type="text" class="validate">
-        <label for="race-humidity">Enter Race Humidity</label>
+        <input placeholder="i.e. 63" id="p-dew" type="text" class="validate"maxlength="3">
+        <label for="p-dew">Race Dewpoint</label>
       </div>
       <div class="input-field col s3 m3 l3">
-        <input placeholder="Race Temperature" id="race-temp" type="text" class="validate">
-        <label for="race-temp">Enter Race Temperature (F)</label>
+        <input placeholder="i.e. " id="p-temp" type="text" class="validate"maxlength="3">
+        <label for="p-temp" >Race Temperature (F)</label>
       </div>
       <div class="input-field col s3 m3 l3">
-        <input placeholder="Race WinsSpeed" id="race-ws" type="text" class="validate">
-        <label for="race-temp">Enter Wind Speed (MPH)</label>
+        <input placeholder="00" id="p-wind-mph" type="text" class="validate"maxlength="3">
+        <label for="p-wind-mph"> Wind Speed (MPH)</label>
       </div>
     </div>
 
@@ -195,5 +195,7 @@
 
   </script>
   <script type="text/javascript" src="./assets/javascript/rmlogic.js"></script>
+  <script type="text/javascript" src="./assets/javascript/agtables.js"></script>
+  <script type="text/javascript" src="./assets/javascript/calculator.js"></script>
 
 </body>

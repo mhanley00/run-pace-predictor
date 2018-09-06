@@ -10,7 +10,7 @@
 var pHoursG = $("#p-run-hours").val(); //past run hours from user input
 var pMinutesG = $("#p-run-mins").val(); //past run minutes from user input
 var pSecondsG = $("#p-run-secs").val(); //past run secons from user input
-var pRunTimeG = (pHoursG * 60 * 60) + (pMinutesG * 60) + (pSeconds); // past run time from user input
+var pRunTimeG = (pHoursG * 60 * 60) + (pMinutesG * 60) + (pSecondsG); // past run time from user input
 var pRunDistG = $("#p-run-dist").val(); // previous/past run distance from user input
 var pAvgPaceG = []; //pAvgePaceG is initally in seconds, then turns into MM:SS in final function call as FinalAdjustedPaceG
 
@@ -33,7 +33,7 @@ var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
 
 
 var cWindmphG; //FROM API CALL
-var cPacemphG; (60 / cAvgPaceG);
+var cPacemphG; (60 / basePaceG);
 var cWindSecOffsetG;
 
 var cTempG; //FROM API CALL
@@ -184,7 +184,7 @@ function initVars2() {
 //jquery document ready
 initVars().then(
   getBasePace (pAvgPaceG, pWindSecOffsetG, pHeatSecOffsetG, basePaceG)
-  .then(adjustedPace(basePaceG, cWindSecOffsetG, cAvgPaceG))); //make sure these are all global
+  .then(adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG))); //make sure these are all global
 //probably need separate global vars for past and current run times/weather
 
 
