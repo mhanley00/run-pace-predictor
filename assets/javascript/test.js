@@ -1,34 +1,7 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <!-- Materialize CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
-
-  <title>TEST TEST TEST</title>
-<!-- GOOGLE MAPS API KEY: AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs -->
-<!-- https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_KEY
- -->
-</head>
-<body>
-  
-    <input placeholder="blank" id="predicted-time" type="text" class="validate">
-    <label for="predicted-time">Predicted Time for Today's Run</label>
-
-
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
-
-
-  <script>
-  // Male--------------------Male---------Male-------Male---//
+// Male--------------------Male---------Male-------Male---//
 
 // 6km..not converted to miles
-var mens = {
+var male = {
   OC: { '5km': [3.1, 779], '6km': [3.7, 942], '4Mile': [4.0, 1014], '8km': [5.0, 1272], '5Mile': [5.0, 1279], '10km': [6.2, 1603], '12km': [7.5, 1942], '15km': [9.3, 2455], '10Mile': [10.0, 2640], '20km': [12.4, 3315], 'H.Mar': [13.1, 3503], '25km': [15.5, 4205], '30km': [18.6, 5110], 'Marathon': [26.2, 7377], '50km': [31.1, 8970], '50Mile': [50.0, 16080], '100km': [62.1, 21360], '150km': [93.2, 36300], '100Mile': [100.0, 39850], '200km': [124.2, 52800] },
 
   '5': { '5km': [3.1, 0.6062], '6km': [3.7, 0.6056], '4Mile': [4.0, 0.6056], '8km': [5.0, 0.6056], '5Mile': [5.0, 0.6056], '10km': [6.2, 0.6056], '12km': [7.5, 0.6056], '15km': [9.3, 0.6056], '10Mile': [10.0, 0.6056], '20km': [12.4, 0.6056], 'H.Mar': [13.1, 0.6056], '25km': [15.5, 0.6056], '30km': [18.6, 0.6056], 'Marathon': [26.2, 0.6056], '50km': [31.1, 0.6056], '50Mile': [50.0, 0.6056], '100km': [62.1, 0.6056], '150km': [93.2, 0.6056], '100Mile': [100.0, 0.6056], '200km': [124.2, 0.6056] },
@@ -253,7 +226,7 @@ var mens = {
 }
 // ------------------Female-------------------------------------------------------------
 
-var womens = {
+var female = {
   OC: { '5km': [3.1,886] ,'6km': [3.7,1071], '4Mile': [4.0,1152], '8km': [5.0,1442], '5Mile': [5.0,1452], '10km': [6.2,1820], '12km': [7.52194], '15km': [9.3,2755], '10Mile': [10.0,2961], '20km': [12.4,3700], 'H.Mar': [13.1,3912], '25km': [15.5,4665], '30km': [18.6,5660], 'Marathon': [26.2,8125], '50km': [31.1,9820], '50Mile': [50.0,17760], '100km': [62.1,23591], '150km': [93.2,39700], '100Mile': [100.0,43500], '200km': [124.2,57600]},
 
   '5': { '5km': [3.1,0.7010 ] ,'6km': [3.7,0.6930], '4Mile': [4.0,0.6930], '8km': [5.0, 0.6930], '5Mile': [5.0,0.6930], '10km': [6.2,0.6930], '12km': [7.5,0.6930], '15km': [9.3,0.5945], '10Mile': [10.0,0.6525], '20km': [12.4, 0.6525], 'H.Mar': [13.1,0.5945], '25km': [15.5, 0.6525, ], '30km': [18.6, 0.6525], 'Marathon': [26.2, ], '50km': [31.1,0.6930], '50Mile': [50.0,0.6930], '100km': [62.1,0.6930], '150km': [93.2,0.6930], '100Mile': [100.0,0.6930], '200km': [124.2,0.6930]},
@@ -520,31 +493,5 @@ if (gender === 'f'){
  return globals;
  
 }
-console.log("Your AG% is: " +AGCalc('m', 25, '20km', 3000));
+console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
  AGCalc('f', 50, '5km', 2000);
-
-//     var address= "1600+Amphitheatre+Parkway,+Mountain+View,+CA";
-//     var queryURL = "https://maps.googleapis.com/maps/api/geocode/json?address="+address+"&key=AIzaSyDhnqnQGVfo6yEQ9-mae3i-Rna0SZExTYs";
-
-//  $.ajax({
-//       url: queryURL,
-//       method: "GET"
-//     }).then(function(data) {
-//       console.log(data);
-
-//       var latResult= data.results[0].geometry.location.lat;
-//       console.log(latResult);
-
-//       var lngResult=data.results[0].geometry.location.lng;
-//       console.log(lngResult);
-  
-
-
-      
-//     });
-
-  </script>
-
-</body>
-
-</html>
