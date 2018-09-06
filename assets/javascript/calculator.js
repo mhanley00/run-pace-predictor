@@ -26,6 +26,9 @@ var pHeatSecOffsetG = [];
 
 var FinalAdjustedPaceG = []; // final adjusted paces in MM:SS-MM:SS
 
+//BASE RUN PACE
+var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
+
 // CURRENT RUN TIME, DISTANCE, WEATHER
 
 
@@ -67,7 +70,7 @@ function windOffset(windMPH, paceMPH, globals){
   // return windSecOffset; DO NOT NEED, THIS IS GLOBAL
   }
 //_________________________________________________________________
-//HEAT TIME OFFSET - IN PERCENT PER MILE
+//HEAT TIME OFFSET - IN SECONDS PER MILE
 //---------———————————————————————————————————————————–––––––––––––
 // 100 or less:   no pace adjustment
 // 101 to 110:   0% to 0.5% pace adjustment
@@ -133,6 +136,60 @@ var basePace;
 console.log(heatEffect(20,100, 100));
 heatEffect(20,100, 1000);
 
+//_________________________________________________________________
+//GET BASE PACE
+//---------———————————————————————————————————————————–––––––––––––
+function getBasePace (pace, windOffset, heatOffset, globals){
+  var totalOffset = windOffsetSeconds + heatOffsetSeconds;
+  globals = pace - totalOffset;
+
+}
+
+//_________________________________________________________________
+//ADJUST BASE PACE VIA CURRENT TEMP, WIND
+//---------———————————————————————————————————————————–––––––––––––
+
+function adjustedPace (basePace, windOffsetSeconds, paceRange) {
+  var windAdjustedPace = basePace + windOffsetSeconds;
+  var cpPace = Math.floor(windAdjustedPace);
+  
+  for (var i = 0; i< paceRange.length; i++) {
+    var paceMins = Math.floor (cpPace/60);
+    var paceSecs = cpPace - (paceMins*60);
+    if (paceSecs < 10) {
+        paceSecs = '0'+ paceSecs;
+      }
+    formattedPace = paceMins + ":" + paceSecs;
+  FinalAdjustedPaceG.push(windAdjustedPace + paceRange[i]);
+  
+  }
+}
+
+//_________________________________________________________________
+//INITIALIZE VARIABLES (ie giant callback)
+//---------———————————————————————————————————————————–––––––––––––
+ function initVars(){
+  //this will go at end; grab all variables from form, make global variables
+  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, pAvgPaceG); //  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, cPaceRangeG);
+  windOffset(pWindmphG, pPacemphG, pWindSecOffsetG);
+  heatEffect(pTempG, pDewG, pHeatSecOffsetG);
+}
+
+function initVars2() {
+  windOffset(cWindmphG, cPacemphG, cWindSecOffsetG);
+  heatEffect(cTempG, cDewG, cHeatSecOffsetG);
+}
+
+
+//jquery document ready
+initVars().then(
+  getBasePace (pAvgPaceG, pWindSecOffsetG, pHeatSecOffsetG, basePaceG)
+  .then(adjustedPace(basePaceG, cWindSecOffsetG, cAvgPaceG))); //make sure these are all global
+//probably need separate global vars for past and current run times/weather
+
+
+
+
 
 //_________________________________________________________________
 //AG% CALCULATOR
@@ -154,40 +211,15 @@ age = parseFloat(age), ageRunTime = parseFloat(ageRunTime);
 if (gender === 'm'){
   var offset = mens[age][distance][1];
   var AGadj = (mens['OC'][distance][1])/offset;
-  var pAGP = AGadj/ageRunTime;
+  globals = AGadj/ageRunTime;
 }
 if (gender === 'f'){
   var offset = womens[age][distance][1];
   var AGadj = (womens['OC'][distance][1])/offset;
   globals = AGadj/ageRunTime;
 }
-return pAGP;
+// return globals; 
 }
 console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
  AGCalc('f', 50, '5km', 2000);
 
-//_________________________________________________________________
-//INITIALIZE VARIABLES (ie giant callback)
-//---------———————————————————————————————————————————–––––––––––––
- function initVars(){
-  //this will go at end; grab all variables from form, make global variables
-  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, pAvgPaceG); //  paceCalc (pRunDistG, pHoursG, pMinutesG, pSecondsG, cPaceRangeG);
-  windOffset(pWindmphG, pPacemphG, pWindSecOffsetG);
-  heatEffect(pTempG, pDewG);
-}
-
-function adjustedPace (basePace, windOffsetSeconds, paceRange) {
-  var windAdjustedPace = basePace + windOffsetSeconds;
-  for (var i = 0; i< paceRange.length, i++) {
-  FinalAdjustedPaceG.push(windAdjustedPace + paceRange[i]);
-  }
-}
-//jquery document ready
-initVars().then(adjustedPace(pAvgPaceG, pWindSecOffsetG, pPaceRangeG)); //make sure these are all global
-//probably need separate global vars for past and current run times/weather
-
-function initCurrentVars(){
-  
-}
-
-adjustedPace(pAvgPaceG, cWindSecOffsetG, cPaceRangeG);
