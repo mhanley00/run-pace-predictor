@@ -32,6 +32,8 @@ $("#calculate-button").on("click",
 //GOOGLE MAPS API
 //---------———————————————————————————————————————————–––––––––––––
 function geocode() {
+    var div = $("#top-container");
+    div.animate({opacity: '0.25'});
     // Input of location from User
     // If then Statement.  If Input of Current Location is empty, then run the following, if not Alert the user. Reset the Field first before proceeding.
     var location = $("#current-location").val();
@@ -101,11 +103,11 @@ function tempInput(lat, long) {
         // console.log(currentWs);
       //  runCalculations();
         // Appending weather info onto DOM
-        $("#today-temp").empty().append("<div class= 'todayTemp'>" + currentTemp + "</div>");
+        $("#today-temp").html("<div>" + currentTemp + "</div>");
 
-        $("#today-hum").empty().append("<div class= 'todayHum'>" + currentDew + "</div>");
+        $("#today-dew").html("<div>" + currentDew + "</div>");
 
-        $("#today-ws").empty().append("<div class= 'todayWs'>" + currentWs + "</div>");
+        $("#today-ws").html("<div>" + currentWs + "</div>");
 
         cWindmphG = currentWs; // see cWindOffset(windMPH2, pPace2)
         cTempG = currentTemp;
@@ -161,7 +163,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
             paceSecs = '0' + paceSecs;
         }
         pAvgPaceG = paceMins + ":" + paceSecs;
-        $("#race-pace").empty().append(pAvgPaceG);
+        $("#race-pace").html(pAvgPaceG);
         // return pAvgPaceG in seconds don't need to return, this adjusts the global varaible average pace
     }
 
@@ -374,7 +376,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
         }
       formattedPace = paceMins + ":" + paceSecs;
     }
-    $("#predicted-pace").empty().append(formattedPace);
+    $("#predicted-pace").html(formattedPace);
   }
   
   function predictRunTime (pastPace, pastDistace){
@@ -387,7 +389,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
     }
     FinalAdjustedTimeG = paceMins + ":" + paceSecs;
 
-    $("#predicted-time").empty().append(FinalAdjustedTimeG);
+    $("#predicted-time").html(FinalAdjustedTimeG);
   }
 
   //_________________________________________________________________
@@ -406,7 +408,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
 //       var AGadj = (womens['OC'][distance][1])/offset;
 //       pAGP = AGadj/totalTime;
 //     }
-//      $("#race-ag").empty().append(pAGP);
+//      $("#race-ag").html(pAGP);
      
 //     }
 //     console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
