@@ -15,6 +15,16 @@ var cDewG; //FROM API CALL
 
 var FinalAdjustedPaceG = []; // final adjusted paces in MM:SS-MM:SS
 var FinalAdjustedTimeG;
+// var pAGP; // AG% of past race time, calculated/ assinged to function AGCalc
+// var runnerGender;
+// var runnerAge;
+// var womens = {
+//     OC:{'5km': [3.1, 886]},
+//     '50': {'5km':[3.1, 0.8937],	
+//     '6km':[6, 0.8914]},
+//     '60': {'5km':[5, 0.77], 
+//     '6km' :[6, .777]}
+//   };
 
 $("#calculate-button").on("click", 
 
@@ -124,6 +134,10 @@ function runCalculations() { //start of massive call. Have snacks on hand.
 
     pTempG = $("#p-temp").val();
     pDewG = $("#p-dew").val();
+    gender = $("#select-gender").val();
+    console.log("gender: " + gender);
+    runnerAge = $("#age").val();
+    console.log("runnerAge: " + runnerAge);
 
 
     //_________________________________________________________________
@@ -367,6 +381,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
     adjustedTime = Math.floor(pastPace*pastDistace);
     var paceMins = Math.floor(adjustedTime/60);
     var paceSecs = adjustedTime - (paceMins * 60);
+    Math.round(paceSecs);
     if (paceSecs < 10) {
         paceSecs = '0' + paceSecs;
     }
@@ -374,6 +389,29 @@ function runCalculations() { //start of massive call. Have snacks on hand.
 
     $("#predicted-time").empty().append(FinalAdjustedTimeG);
   }
+
+  //_________________________________________________________________
+  //AG% CALCULATOR
+  //---------———————————————————————————————————————————–––––––––––––
+
+//   function AGCalc (gender, age, distance, hours, minutes, seconds) {
+//     age = parseFloat(age), totalTime = parseFloat((hours*60*60) + (minutes*60)+ seconds);
+//     if (gender === 'm'){
+//       var offset = mens[age][distance][1];
+//       var AGadj = (mens['OC'][distance][1])/offset;
+//       pAGP = AGadj/totalTime;
+//     }
+//     if (gender === 'f'){
+//       var offset = womens[age][distance][1];
+//       var AGadj = (womens['OC'][distance][1])/offset;
+//       pAGP = AGadj/totalTime;
+//     }
+//      $("#race-ag").empty().append(pAGP);
+     
+//     }
+//     console.log("Your AG% is: " +AGCalc('f', 50, '5km', 3000));
+
+
 
     //_________________________________________________________________
     //GRAND FINALE - CALL CALCULATION FUNCTIONS
@@ -392,6 +430,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
     adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG);
     console.log("FinalAdjustedPaceG: " + FinalAdjustedPaceG);
     predictRunTime (FinalAdjustedPaceG[0], pRunDistG);
+    // AGCalc (runnerGender, runnerAge, pRunDistG, pHoursG, pMinutesG, pSecondsG);
 
 
 
