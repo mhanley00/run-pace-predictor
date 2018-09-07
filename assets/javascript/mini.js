@@ -12,7 +12,6 @@ var cWindSecOffsetG;
 var cTempG; //FROM API CALL
 var cDewG;//FROM API CALL
 
-
 $("#calculate-button").on("click",
 
     //_________________________________________________________________
@@ -72,12 +71,16 @@ function tempInput(lat, long) {
     $.ajax({
         url: queryURL,
         method: "GET"
-    }).then(function (response) {
+    }).then(function (response1) {
         console.log("darkskyAPI:")
-        console.log(response);
-        var currentTemp = response.currently.temperature;
-        var currentDew = response.currently.dewPoint;
-        var currentWs = response.currently.windSpeed;
+        console.log(response1);
+        setTimeout(function(){
+            console.log('hello what is goin on?');
+           // runCalculations();// call function here
+        }, 7000);
+        var currentTemp = response1.currently.temperature;
+        var currentDew = response1.currently.dewPoint;
+        var currentWs = response1.currently.windSpeed;
         // console.log(currentTemp);
         // console.log(currentDew);
         // console.log(currentWs);
@@ -98,8 +101,8 @@ function tempInput(lat, long) {
     })
 }
 
-$("#calculate-button").on("click",
-    function () { //start of massive call. Have snacks on hand.
+
+    function runCalculations() { //start of massive call. Have snacks on hand.
         //_________________________________________________________________
         //GLOBAL VARIABLES - EXPLANATION BELOW or RIGHT of VAR DECLARATION
         //---------———————————————————————————————————————————–––––––––––––
@@ -152,7 +155,8 @@ $("#calculate-button").on("click",
             //45 / 3,600 = 0.0125 hours.
             var paceMPH = 1 / (pPace / 3600); //dividing seconds per mile by 1 hour (3600")
             console.log("paceMPH: ME" + paceMPH);
-            var windDivPace = windMPH / paceMPH; //step-by-step so Math.pow doesn't freak out
+            var windDivPace = windMPH 
+            windDivPace/ paceMPH; //step-by-step so Math.pow doesn't freak out
             pWindSecOffsetG = (12 * (Math.pow(windDivPace, 2)));
             console.log(pWindSecOffsetG);
         }
@@ -251,6 +255,7 @@ $("#calculate-button").on("click",
             //This does not get written to the DOM. Next we'll add this to the heat/temp offset.
             //45 / 3,600 = 0.0125 hours.
             var paceMPH2 = 1 / (pPace2 / 3600); //dividing seconds per mile by 1 hour (3600")
+            console.log("windMPH2L " + windMPH2);
             console.log("paceMPH2: " + paceMPH2);
             var windDivPace = parseFloat(windMPH2) / parseFloat(paceMPH2); //step-by-step so Math.pow doesn't freak out
             console.log("windDivPace: " + windDivPace);
@@ -272,6 +277,6 @@ $("#calculate-button").on("click",
 
 
 
-    }) // end of click listener
+    }// end of function runCalculations ()
 
 
