@@ -8,9 +8,13 @@ var pHeatSecOffsetG = [];
 var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
 var cWindmphG; //FROM API CALL
 var cWindSecOffsetG;
+var cHeatSecOffsetG = [];
 
 var cTempG; //FROM API CALL
 var cDewG; //FROM API CALL
+
+var FinalAdjustedPaceG = []; // final adjusted paces in MM:SS-MM:SS
+var FinalAdjustedTimeG;
 
 $("#calculate-button").on("click", 
 
@@ -154,15 +158,19 @@ function runCalculations() { //start of massive call. Have snacks on hand.
         //winOffset will return the wind's impact on runner's time seconds per mile.
         //This does not get written to the DOM. Next we'll add this to the heat/temp offset.
         //45 / 3,600 = 0.0125 hours.
-        var paceMPH = 1 / (pPace / 3600); //dividing seconds per mile by 1 hour (3600")
-        console.log("paceMPH: ME" + paceMPH);
-        var windDivPace = windMPH
+        // var paceMPH = 1 / (pPace / 3600); //dividing seconds per mile by 1 hour (3600")
+        paceMins = pPace/60
+        var paceMPH = 60/paceMins;
+        console.log("paceMPH: ME " + paceMPH);
+        var windDivPace = windMPH;
         windDivPace / paceMPH; //step-by-step so Math.pow doesn't freak out
-        pWindSecOffsetG = (12 * (Math.pow(windDivPace, 2)));
-        console.log(pWindSecOffsetG);
+        pWindSecOffsetG = ((12 * (Math.pow(windDivPace, 2)))/60);
+
+        // pWindSecOffsetG/60;
+        console.log("pWindSecOffsetG: AFTER DIV " + pWindSecOffsetG);
     }
     //_________________________________________________________________
-    //HEAT TIME OFFSET - IN SECONDS PER MILE
+    //HEAT TIME OFFSET - IN SECONDS PER MILE - PAST
     //---------———————————————————————————————————————————–––––––––––––
     // 100 or less:   no pace adjustment
     // 101 to 110:   0% to 0.5% pace adjustment
@@ -175,7 +183,7 @@ function runCalculations() { //start of massive call. Have snacks on hand.
     // 171 to 180:   8.0% to 10.0% pace adjustment
     // Above 180:   hard running not recommended
     //This works in repl but not in here: https://repl.it/@mhanley00/Heat-Offset-Sec-Per-Mile
-    function heatEffect(temperature, dewPoint, basePace) {
+    function pHeatEffect(temperature, dewPoint, basePace) {
         // var temperature;
         // var dewPoint;
         // var basePace;
@@ -235,10 +243,13 @@ function runCalculations() { //start of massive call. Have snacks on hand.
     //---------———————————————————————————————————————————–––––––––––––
     function getBasePace(pace, windOffset, heatOffset) {
         var totalOffset = parseFloat(windOffset) + parseFloat(heatOffset);
+        console.log("totalOffset: "+ totalOffset);
         basePaceG = parseFloat(pace) - parseFloat(totalOffset);
 
     }
-
+//_________________________________________________________________
+    //WIND MPH TIME OFFSET - IN SECONDS PER MILE - CURRENT
+    //---------———————————————————————————————————————————–––––––––––––
     function cWindOffset(windMPH2, pPace2) {
         //cWindmphG = currentWs; // see Dark Sky API call
         // cTempG = currentTemp;
@@ -246,27 +257,142 @@ function runCalculations() { //start of massive call. Have snacks on hand.
         //winOffset will return the wind's impact on runner's time seconds per mile.
         //This does not get written to the DOM. Next we'll add this to the heat/temp offset.
         //45 / 3,600 = 0.0125 hours.
-        var paceMPH2 = 1 / (pPace2 / 3600); //dividing seconds per mile by 1 hour (3600")
-        console.log("windMPH2L " + windMPH2);
-        console.log("paceMPH2: " + paceMPH2);
-        var windDivPace = parseFloat(windMPH2) / parseFloat(paceMPH2); //step-by-step so Math.pow doesn't freak out
-        console.log("windDivPace: " + windDivPace);
-        cWindSecOffsetG = (12 * (Math.pow(windDivPace, 2)));
+        paceMins = pPace2/60
+        var paceMPH = 60/paceMins;
+        var windDivPace = windMPH2;
+        windDivPace / paceMPH; //step-by-step so Math.pow doesn't freak out
+        cWindSecOffsetG = ((12 * (Math.pow(windDivPace, 2)))/60);
+        console.log("cWindSecOffsetG: "+ cWindSecOffsetG);
+
     }
+    //_________________________________________________________________
+    //HEAT TIME OFFSET - IN SECONDS PER MILE - CURRENT
+    //---------———————————————————————————————————————————–––––––––––––
+    // 100 or less:   no pace adjustment
+    // 101 to 110:   0% to 0.5% pace adjustment
+    // 111 to 120:   0.5% to 1.0% pace adjustment
+    // 121 to 130:   1.0% to 2.0% pace adjustment
+    // 131 to 140:   2.0% to 3.0% pace adjustment
+    // 141 to 150:   3.0% to 4.5% pace adjustment
+    // 151 to 160:   4.5% to 6.0% pace adjustment
+    // 161 to 170:   6.0% to 8.0% pace adjustment
+    // 171 to 180:   8.0% to 10.0% pace adjustment
+    // Above 180:   hard running not recommended
+    //This works in repl but not in here: https://repl.it/@mhanley00/Heat-Offset-Sec-Per-Mile
+    function cHeatEffect(temperature, dewPoint, basePace) {
+        // var temperature;
+        // var dewPoint;
+        // var basePace;
+        var lowHeatEst;
+        var highHeatEst;
+        var heatScore = parseFloat(temperature) + parseFloat(dewPoint);
+        console.log("NEW heatScore: " + heatScore);
+        console.log("NEW temperature: " + temperature);
+        console.log("NEW dewPoint: " + dewPoint);
+        if (heatScore <= 100) {
+            lowHeatEst = 0;
+            highHeatEst = 0;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 101 && heatScore <= 110) {
+            lowHeatEst = 0;
+            highHeatEst = basePace * .005;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 111 && heatScore <= 120) {
+            lowHeatEst = basePace * .005;
+            highHeatEst = basePace * .01;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 121 && heatScore <= 130) {
+            lowHeatEst = basePace * .01;
+            highHeatEst = basePace * .02;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 131 && heatScore <= 140) {
+            lowHeatEst = basePace * .02;
+            highHeatEst = basePace * .03;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 141 && heatScore <= 150) {
+            lowHeatEst = basePace * .03;
+            highHeatEst = basePace * .045;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 151 && heatScore <= 160) {
+            lowHeatEst = basePace * .045;
+            highHeatEst = basePace * .06;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 161 && heatScore <= 170) {
+            lowHeatEst = basePace * .06;
+            highHeatEst = basePace * .08;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else if (heatScore >= 171 && heatScore <= 180) {
+            lowHeatEst = basePace * .08;
+            highHeatEst = basePace * .1;
+            console.log("lowHeatEst: " + lowHeatEst);
+        } else {
+            return "Head to the pool!"; //write to DOM
+        }
+        console.log("CURRENT lowHeatEst: " + lowHeatEst);
+        console.log("CURRENT highHeatEst: " + highHeatEst);
+        cHeatSecOffsetG.push(lowHeatEst, highHeatEst);
+        console.log('CURRENT pHeatSecOffsetG: ' + pHeatSecOffsetG);
+
+    }
+
+    //_________________________________________________________________
+  //ADJUST BASE PACE VIA CURRENT TEMP, WIND
+  //---------———————————————————————————————————————————–––––––––––––
+  
+  function adjustedPace (basePace, windOffsetSeconds, heatOffsetRange) {
+    var windAdjustedPace = basePace + windOffsetSeconds;
+    var cpPace = Math.floor(windAdjustedPace);
+    
+    for (var i = 0; i< heatOffsetRange.length; i++) {
+        windAndHeat = windAdjustedPace + heatOffsetRange[i]; 
+    //   paceMins = Math.floor (cpPace/60);
+    //   paceSecs = cpPace - (paceMins*60);
+    //   if (paceSecs < 10) {
+    //       paceSecs = '0'+ paceSecs;
+    //     }
+    //   formattedPace = paceMins + ":" + paceSecs;
+    FinalAdjustedPaceG.push(windAndHeat);
+    console.log("FinalAdjustedPaceG: " + FinalAdjustedPaceG);
+    paceMins = Math.floor (FinalAdjustedPaceG[0]/60);
+      paceSecs = FinalAdjustedPaceG[0] - (paceMins*60);
+      if (paceSecs < 10) {
+          paceSecs = '0'+ paceSecs;
+        }
+      formattedPace = paceMins + ":" + paceSecs;
+    }
+    $("#predicted-pace").empty().append(formattedPace);
+  }
+  
+  function predictRunTime (pastPace, pastDistace){
+    adjustedTime = Math.floor(pastPace*pastDistace);
+    var paceMins = Math.floor(adjustedTime/60);
+    var paceSecs = adjustedTime - (paceMins * 60);
+    if (paceSecs < 10) {
+        paceSecs = '0' + paceSecs;
+    }
+    FinalAdjustedTimeG = paceMins + ":" + paceSecs;
+
+    $("#predicted-time").empty().append(FinalAdjustedTimeG);
+  }
 
     //_________________________________________________________________
     //GRAND FINALE - CALL CALCULATION FUNCTIONS
     //---------———————————————————————————————————————————–––––––––––––
     paceCalc(pRunDistG, pHoursG, pMinutesG, pSecondsG);
     pWindOffset(pWindmphG, pAvgePaceSecsG);
-    heatEffect(pTempG, pDewG, pAvgePaceSecsG);
+    pHeatEffect(pTempG, pDewG, pAvgePaceSecsG);
     console.log(pWindSecOffsetG);
     console.log(pHeatSecOffsetG);
     getBasePace(pAvgePaceSecsG, pWindSecOffsetG, pHeatSecOffsetG);
-    console.log(basePaceG); //note: basePaceG is in seconds for base calculations
+    console.log("BASE PACE: " +basePaceG); //note: basePaceG is in seconds for base calculations
     cWindOffset(cWindmphG, basePaceG);
     console.log("cWindSecOffsetG: " + cWindSecOffsetG);
+    cHeatEffect(cTempG, cDewG, basePaceG);
+    console.log(cHeatSecOffsetG);
+    adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG);
+    console.log("FinalAdjustedPaceG: " + FinalAdjustedPaceG);
+    predictRunTime (FinalAdjustedPaceG[0], pRunDistG);
 
 
 
-} // end of function runCalculations ()
+} // end of function runCalculations (
