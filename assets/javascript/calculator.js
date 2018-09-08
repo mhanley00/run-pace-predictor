@@ -31,9 +31,9 @@ var basePaceG; //based on pAvePace but later we subtract wind and heat offsets
 
 // CURRENT RUN TIME, DISTANCE, WEATHER
 
-
+var cAvgPaceG;
 var cWindmphG; //FROM API CALL
-var cPacemphG; (60 / cAvgPaceG);
+var cPacemphG; (60 / basePaceG);
 var cWindSecOffsetG;
 
 var cTempG; //FROM API CALL
@@ -184,7 +184,7 @@ function initVars2() {
 //jquery document ready
 initVars().then(
   getBasePace (pAvgPaceG, pWindSecOffsetG, pHeatSecOffsetG, basePaceG)
-  .then(adjustedPace(basePaceG, cWindSecOffsetG, cAvgPaceG))); //make sure these are all global
+  .then(adjustedPace(basePaceG, cWindSecOffsetG, cHeatSecOffsetG))); //make sure these are all global
 //probably need separate global vars for past and current run times/weather
 
 
